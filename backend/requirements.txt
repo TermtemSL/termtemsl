@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+pydantic
+# Force NumPy 1.x for MediaPipe compatibility
+numpy<2.0.0
+# Use an older OpenCV version that works with NumPy 1.x
+opencv-python==4.10.0.84
+# MediaPipe works best with this setup
+mediapipe==0.10.14
