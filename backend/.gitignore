@@ -3,15 +3,19 @@ venv/
 env/
 ENV/
 .venv/
-.env/
 
+# Environment files
+.env
+.env.*
 
-
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
-.env
-uploads/*
-outputs/*
-models/*
+
+# Local generated files
+uploads/**
+outputs/**
+models/**
+!models/
 !models/.gitkeep
