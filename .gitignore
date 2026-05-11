@@ -1,0 +1,11 @@
+data/*
+demo_data/*
+
+!data/
+!data/video_metadata.json
+
+eval_env/
+preprocess_env/
+train_env/
+
+test_data/
