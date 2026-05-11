@@ -1,0 +1,21 @@
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Environment files
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local generated files
+uploads/**
+outputs/**
+models/**
+!models/
+!models/.gitkeep
