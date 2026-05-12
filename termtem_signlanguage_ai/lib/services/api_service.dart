@@ -12,18 +12,22 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> uploadVideo() async {
+  static Future<fp.PlatformFile?> pickVideo() async {
     final result = await fp.FilePicker.pickFiles(
       type: fp.FileType.video,
       withData: true,
     );
 
     if (result == null || result.files.isEmpty) {
-      throw Exception('No video selected');
+      return null;
     }
 
-    final file = result.files.first;
+    return result.files.first;
+  }
 
+  static Future<Map<String, dynamic>> uploadSelectedVideo(
+    fp.PlatformFile file,
+  ) async {
     if (file.bytes == null) {
       throw Exception('File bytes are empty');
     }
