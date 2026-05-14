@@ -91,6 +91,47 @@ Deep Learning provides stronger capabilities for:
 
 ---
 
+# Installation Guide
+
+## Backend Setup
+
+The backend is built with FastAPI. For full backend setup details, please refer to the [Backend README](./backend/README.md).
+
+To run the backend server quickly, you can use the following commands:
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
+
+## Frontend Setup
+
+The frontend is a Flutter application. To run and build the mobile app, you will need Android Studio.
+
+### Prerequisites
+- Install [Flutter SDK](https://flutter.dev/docs/get-started/install)
+- Install [Android Studio](https://developer.android.com/studio) (required for the Android emulator and SDK tools)
+- Run `flutter doctor` in your terminal to verify that all prerequisites are met.
+
+### Running the Application
+
+1. **Navigate to the frontend directory:**
+   ```bash
+   cd termtem_signlanguage_ai
+   ```
+
+2. **Install Flutter dependencies:**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Run the app:**
+   Ensure you have an emulator running in Android Studio or a physical device connected, then run:
+   ```bash
+   flutter run
+   ```
+
+---
+
 # Team Development Guidelines
 
 ## 1. Main Branch Protection
