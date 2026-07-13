@@ -9,3 +9,10 @@ preprocess_env/
 train_env/
 
 test_data/
+
+backend/
+.venv/
+
+experiment_model/*
+!experiment_model/scripts/
+!experiment_model/scripts/**
