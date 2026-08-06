@@ -1,0 +1,716 @@
+Thai Sign Language AI — Academic Repository Audit Report
+
+Repository: c:\Users\Napat\termtemsl
+Branch audited: ai/data_processing
+Audit date: 2026-05-13
+
+================================================================================
+Task B-1 — Input Data Description and Exploration
+================================================================================
+
+REQUIREMENT SUMMARY
+Demonstrate that the input dataset has been systematically described and explored:
+distributions, statistics, quality checks, class balance, and visualization of
+raw data characteristics.
+
+RELEVANT FILES
+- scripts/01_eda.ipynb                       (Primary EDA notebook, 546 KB, 1800+ lines)
+- scripts/02_preprocessing.ipynb             (Contains Cell 9 sanity-check visualization)
+- data/video_metadata.json                   (Full dataset metadata, 1.4 MB)
+- demo_data/video_metadata.json              (Demo subset metadata, 24 KB)
+- demo_data/processed/labels.json            (Class name/index mapping)
+- demo_data/processed/train_files.json       (Training file list with labels, 130 KB)
+- scripts/reorganize_dataset.py              (Dataset restructuring script, 1,060 lines)
+
+CURRENT IMPLEMENTATION
+01_eda.ipynb is a full-featured, 11-section exploratory analysis notebook.
+Evidence from cell heading grep confirms all of the following sections exist:
+
+  Section 1  : Setup, imports, paths
+  Section 2  : Dataset loading & schema validation, null/missing field audit
+  Section 3  : Basic statistics, split distribution bar + fallback pie
+  Section 4  : Category analysis, imbalance bar chart, dominant vs rare categorization
+  Section 5  : Word-level analysis, word frequency, word x category heatmap,
+               word/label discrepancy
+  Section 6  : Video path integrity check, missing files, orphaned files,
+               duplicate paths
+  Section 7  : Fallback analysis, fallback reason taxonomy, fallback distribution
+               per category
+  Section 8  : Video feature exploration, frame metadata field analysis
+  Section 9  : Split analysis, per-split composition, category balance heatmap
+               per split, cross-split leakage check
+  Section 10 : Data quality issues (10 categories: null fields, missing videos,
+               missing source files, duplicate paths, duplicate IDs, label drift,
+               word/category mismatches, splits missing, fallback in training,
+               naming inconsistencies)
+  Section 11 : Insights summary, final overview dashboard
+
+The demo_data subset used in training contains:
+  - 10 classes: kho thot, di, sawatdi, a rai, ngoen, thora sap, khrai, chai,
+                mai, mai di (Thai words)
+  - 320 raw videos -> 1,200 training sequences after 4x offline augmentation
+  - Split: 300 train / 10 val / 10 test source videos per the _02/_03/_04
+    suffix convention
+  - Full dataset in /data/ spans 70+ Thai sign categories with
+    video_metadata.json (1.4 MB)
+
+reorganize_dataset.py documents data collection methodology: 103 folder merge
+mappings and 872 individual video classifications from the raw scraped dataset.
+
+EVIDENCE FROM REPOSITORY
+- Section headers confirmed via grep: sections 1-11 with anchors <a id='1'></a>
+  through <a id='11'></a>
+- Visualization types confirmed: bar charts, pie charts, heatmaps, word frequency
+  plots, split composition charts, data quality severity chart, final dashboard
+- Quality audits confirmed: 10 distinct quality checks including cross-split
+  leakage detection
+- labels.json directly verifies 10-class taxonomy
+- video_metadata.json (1.4 MB) confirms full dataset scope
+
+REQUIREMENT COVERAGE ASSESSMENT: FULLY IMPLEMENTED
+
+The EDA notebook is comprehensive and professionally structured. It covers dataset
+schema validation, class balance analysis, split integrity verification,
+cross-split leakage detection, label consistency checks, and a 10-category data
+quality audit.
+
+MISSING COMPONENTS
+- No executed cell outputs are visible for Section 3-11 charts — notebook outputs
+  would need re-execution to confirm visualizations are intact
+- No signer demographic metadata exists (age, gender, handedness) — limiting
+  any fairness analysis downstream
+- The full /data/ dataset (70+ categories) has no corresponding EDA — only
+  demo_data/ is analyzed in the training pipeline
+
+RECOMMENDED NEXT STEPS
+1. Re-execute the EDA notebook and commit with outputs saved so reviewers can
+   see charts without re-running
+2. Add a section comparing the 10 demo classes against the 70+ full-dataset
+   categories
+3. Document why only 10 classes were selected for training
+
+
+================================================================================
+Task B-2 — Model Training Implementation
+================================================================================
+
+REQUIREMENT SUMMARY
+Implement a complete, reproducible model training pipeline: data loading,
+preprocessing, model architecture definition, optimizer configuration, training
+loop, evaluation, and artifact saving.
+
+RELEVANT FILES
+- scripts/02_preprocessing.ipynb             (Preprocessing pipeline, 168 KB, 9 cells)
+- scripts/03_training.ipynb                  (Model training, 270 KB, 10 cells, fully executed)
+- models/lstm_model.keras                    (Saved model artifact, 1.68 MB)
+- models/model_info.json                     (Model metadata)
+- models/training_curves.png                 (Training/validation curves, 115 KB)
+- models/confusion_matrix.png                (Val set confusion matrix, 78 KB)
+- demo_data/processed/                       (Preprocessed .npy arrays + normalization stats)
+
+CURRENT IMPLEMENTATION
+
+Preprocessing Pipeline (02_preprocessing.ipynb)
+A six-stage pipeline producing (60, 404) feature arrays per video:
+
+  video.mp4
+    -> extract_keypoints()   [MediaPipe Holistic]  -> (n_frames, 201)
+         -> compute_features()                      -> (n_frames, 404)
+              -> normalize_sequence()               -> (60, 404)
+                   -> augment_sequence()            -> 4 variants per training video
+                        -> global z-score           -> normalized .npy files
+
+Feature engineering in compute_features():
+  - Body-relative normalization using shoulder midpoint as origin and shoulder
+    width as scale
+  - Frame-to-frame velocity (201 additional features)
+  - Left-right wrist Euclidean distance (1 feature)
+  - Dominant hand speed (L2 norm of wrist velocity, 1 feature)
+  - Total: 201 raw + 201 velocity + 1 hand_dist + 1 dom_speed = 404 features
+
+Temporal normalization: Sequences interpolated/subsampled to exactly
+TARGET_FRAMES = 60
+
+Global normalization: Mean and std computed over 72,000 training frames
+(global_mean.npy, global_std.npy)
+
+Offline augmentation (training only, N_AUGMENTS_PER_TRAIN = 3):
+  Gaussian noise (sigma in 0.003-0.006), 2D rotation (+-3 degrees),
+  speed variation (x0.92-1.08)
+
+Model Architecture (03_training.ipynb Cell 3, confirmed with saved summary):
+
+  Input (60, 404)
+    -> Masking (mask_value=0.0)
+    -> LSTM(64, return_sequences=True,  L2=0.02)   [120,064 params]
+    -> Dropout(0.65)
+    -> LSTM(32, return_sequences=False, L2=0.02)   [12,416 params]
+    -> Dropout(0.65)
+    -> Dense(64, relu, L2=0.02)                    [2,112 params]
+    -> BatchNormalization()                         [256 params]
+    -> Dropout(0.4)
+    -> Dense(10, softmax)                           [650 params]
+  Total trainable params: 135,370 (528 KB)
+
+  NOTE: Cell 3 docstring refers to LSTM(128)/LSTM(64) but actual model built
+  uses LSTM_UNITS = [64, 32] from configuration. The saved model at
+  04_evaluation.ipynb shows a different loaded model with LSTM(128)/LSTM(64)
+  and output Dense(25) -- indicating TWO DISTINCT TRAINING RUNS exist, with
+  the final saved lstm_model.keras being the 25-class version.
+
+Training Configuration:
+  Batch size           : 32
+  Epochs               : 200 (EarlyStopping patience=25)
+  Learning rate        : 1e-4
+  L2 regularization    : 0.02
+  Dropout (LSTM)       : 0.65
+  Dropout (Dense)      : 0.4
+  Label smoothing      : 0.15
+  MixUp alpha          : 0.3
+  Online augments/video: 50
+  Steps per epoch      : 1,875
+
+Online augmentation in tf.data pipeline (12 families): horizontal flip,
+rotation +-3/+-5 degrees, noise sigma=0.003/0.006, speed x0.90-0.95 /
+x1.05-1.10, temporal shift +-2-4 frames, flip+noise, rotation+noise
+
+MixUp implemented via mixup_batch() with Beta(0.3, 0.3) sampling
+
+Callbacks: EarlyStopping(patience=25), ReduceLROnPlateau(factor=0.5,
+patience=10), ModelCheckpoint(monitor='val_accuracy')
+
+Evaluation Results (confirmed from notebook cell outputs):
+  Best validation accuracy: 0.8000  (10-class, 10 val samples)
+  F1 = 1.0:   mai di, mai, khrai
+  F1 = 0.0:   sawatdi, chai
+  F1 = 0.667: di
+  Most-confused pair: sawatdi -> thora sap
+
+Saved artifacts confirmed present:
+  lstm_model.keras, model_info.json, training_curves.png, confusion_matrix.png
+
+EVIDENCE FROM REPOSITORY
+- build_model() function fully implemented at 03_training.ipynb:Cell-3
+- model.fit() call confirmed at Cell-5 with history object
+- ModelCheckpoint saves to '../models/lstm_model.keras'
+- classification_report and confusion_matrix called at Cell-7
+- f1_score(y_val, y_pred, average=None) called at Cell-8
+- Model summary output saved in notebook
+  (LSTM->Dropout->LSTM->Dropout->Dense->BN->Dropout->Dense)
+- best_val_accuracy: 0.8 confirmed in models/model_info.json
+
+REQUIREMENT COVERAGE ASSESSMENT: FULLY IMPLEMENTED
+
+The training pipeline is complete, professionally implemented, and has been
+executed to completion with artifacts saved. The preprocessing, architecture,
+training loop, evaluation, and model serialization are all present with
+confirmed outputs.
+
+MISSING COMPONENTS
+- No baseline model comparison -- no dummy classifier, CNN baseline, or
+  alternative architecture comparison
+- Inconsistency between training and evaluation -- 03_training.ipynb trains a
+  10-class model but lstm_model.keras contains a 25-class model (Dense(25)
+  output, 25 class names in evaluation), suggesting a more recent training run
+  exists but is not documented in the current notebooks
+- No requirements.txt -- dependencies are only captured inside virtual
+  environments (train_env/, eval_env/), not as a portable requirements file
+- No reproducibility seed across all stages -- np.random.seed(42) is set in
+  cells but MediaPipe processing order is filesystem-dependent
+
+RECOMMENDED NEXT STEPS
+1. Reconcile the 10-class vs 25-class discrepancy by adding a
+   03b_training_25class.ipynb or updating 03_training.ipynb to reflect the
+   actually-saved model
+2. Add a requirements.txt at the project root capturing all training
+   dependencies
+3. Add a baseline model cell (majority-class or simple heuristic) for
+   comparison
+
+
+================================================================================
+Task B-3 — Model Fairness Analysis
+================================================================================
+
+REQUIREMENT SUMMARY
+Analyze whether the model exhibits biased behavior across subgroups. This
+typically involves demographic parity, equalized odds, or per-subgroup
+performance analysis using fairness toolkits (e.g., Fairlearn, AIF360).
+
+RELEVANT FILES
+- None directly relevant
+
+CURRENT IMPLEMENTATION
+A thorough grep for fairlearn, fairness, aif360, demographic_parity,
+equalized_odds, shap, lime, and related terms across all .py and .ipynb files
+in the project returned ZERO MATCHES outside of virtual environment packages.
+
+The EDA notebook (01_eda.ipynb) contains split analysis and category balance
+charts but does NOT analyze performance across signer demographics (e.g., age,
+gender, handedness, signing speed).
+
+The dataset metadata (video_metadata.json) does not contain signer demographic
+fields -- only id, url, word, category, video_path, landmarks, label_id, split,
+and frames.
+
+EVIDENCE FROM REPOSITORY
+- grep -r "fairlearn|fairness|aif360|demographic" -> 0 matches in project code
+- video_metadata.json schema: no demographic fields confirmed from
+  scrape_video_metadata.py field list
+- No fairness analysis notebook exists
+- No fairness metric logging in training or evaluation notebooks
+
+REQUIREMENT COVERAGE ASSESSMENT: NOT IMPLEMENTED
+
+There is no fairness analysis anywhere in the repository. The dataset does not
+contain demographic attributes, and no subgroup performance analysis has been
+performed.
+
+MISSING COMPONENTS
+- No demographic metadata (signer age, gender, handedness, signing style) in
+  dataset
+- No fairness metric computation (demographic parity, equalized odds, equal
+  opportunity)
+- No fairness toolkit imported (fairlearn, aif360, themis-ml, etc.)
+- No subgroup accuracy breakdown (e.g., performance by signer identity,
+  video source)
+- No fairness-aware training or post-processing
+- No per-split fairness comparison
+
+RECOMMENDED NEXT STEPS
+1. Minimum viable fairness analysis: Break down per-class accuracy as a proxy
+   for fairness (already partially done in 04_evaluation.ipynb Cell 8b) --
+   extend this to at least discuss what "fairness" means in this context
+2. Add signer ID metadata if multiple signers were recorded per sign --
+   compute per-signer accuracy
+3. Use fairlearn.metrics.MetricFrame to compare accuracy across available
+   subgroups
+4. Document that dataset collection did not capture demographics and explain
+   the limitation
+
+
+================================================================================
+Task B-4 — Model Versioning and Experimentation
+================================================================================
+
+REQUIREMENT SUMMARY
+Demonstrate that multiple model versions or experiments were tracked, compared,
+and their results logged. This typically involves MLflow, Weights & Biases, or
+equivalent experiment tracking.
+
+RELEVANT FILES
+- models/lstm_model.keras          (Final saved model)
+- models/model_info.json           (Metadata for saved model)
+- models/training_curves.png       (Training history chart)
+- models/confusion_matrix.png      (Val set confusion matrix)
+- Git history                      (Commits reference multiple model iterations)
+
+CURRENT IMPLEMENTATION
+The project shows evidence of multiple training iterations through git commit
+history:
+  97fb9d2  fix: new model with increase val_acc to 0.8
+  77e4e5f  fix: increase the val_acc for model
+  efb05a8  fix: increase the number of videos per word and decrease classes
+  967e0b6  feat: model for predict user's video
+
+The model_info.json records final model metadata: input shape, number of
+classes, class names, best validation accuracy, and feature config. Training
+notebooks comment on prior hyperparameter values inline (e.g., "# was 5e-3",
+"# was 0.55", "# was 5e-4"), indicating iterative experimentation was done.
+
+The saved artifacts (training_curves.png, confusion_matrix.png) document the
+FINAL model run only.
+
+A comprehensive search for mlflow, mlruns, wandb, comet, neptune,
+experiment_tracker returned ZERO MATCHES in any project file. There is no
+mlruns/ directory, no .mlflow config, no W&B project config, and no experiment
+tracking artifacts of any kind.
+
+EVIDENCE FROM REPOSITORY
+- grep -r "mlflow" across all notebooks/scripts -> 0 matches
+- grep -r "wandb|comet_ml|neptune" -> 0 matches
+- No mlruns/ directory exists
+- Git commits reference model improvements (val_acc to 0.8) but no structured
+  log
+- Inline comments in 03_training.ipynb Cell 1: "# was 0.55", "# was 5e-3",
+  "# was 5e-4" -- evidence of version history via code comments only
+- models/model_info.json records final state only; no history
+
+REQUIREMENT COVERAGE ASSESSMENT: PARTIALLY IMPLEMENTED
+
+Multiple training iterations were clearly performed (evidenced by git history
+and inline comments), and a final model artifact with metadata is saved.
+However, there is no structured experiment tracking -- no comparison tables,
+no MLflow runs, no parameter sweep results, and no systematic record of what
+was tried and what effect each change had.
+
+MISSING COMPONENTS
+- No MLflow, W&B, or any experiment tracking system
+- No experiment comparison table (e.g., different LSTM sizes, L2 values,
+  augmentation settings)
+- No saved intermediate model checkpoints from prior experiments
+- No hyperparameter sweep log
+- No mlruns/ directory or equivalent artifact store
+- Inline comments ("# was 5e-3") are not searchable, versioned, or queryable
+  as experiment records
+- No screenshot or export of comparison across runs
+
+RECOMMENDED NEXT STEPS
+1. Integrate MLflow at minimum: mlflow.start_run() -> log lr, dropout, l2_reg,
+   lstm_units, augments_per_video -> log val_accuracy, val_loss ->
+   mlflow.keras.log_model()
+2. Alternatively, create a simple experiments_log.csv manually documenting
+   each run: date, hyperparameters, val_accuracy, notes
+3. Retroactively document the 4 git-evidenced model versions as a table in
+   the README or a new notebook cell
+
+
+================================================================================
+Task B-5 — Model Explainability
+================================================================================
+
+REQUIREMENT SUMMARY
+Apply explainability methods to interpret model decisions. Common approaches for
+time-series/deep learning models include SHAP, LIME, attention visualization,
+saliency maps, or feature importance analysis.
+
+RELEVANT FILES
+- None directly relevant
+
+CURRENT IMPLEMENTATION
+A comprehensive grep for shap, lime, interpret, saliency, gradcam, attention,
+feature_importance, explainab across all project notebooks and scripts returned
+ZERO MATCHES.
+
+The evaluation notebook (04_evaluation.ipynb) provides:
+  - Per-class accuracy (Cell 8b)
+  - Confidence score distributions (Cell 7)
+  - Top-3 class predictions per video (Cell 4, top3_labels field)
+
+These provide surface-level prediction diagnostics but do NOT constitute
+explainability in the academic ML sense -- they describe WHAT was predicted and
+with what confidence, but not WHY specific input features drove the decision.
+
+EVIDENCE FROM REPOSITORY
+- grep -r "shap|lime|captum|tf-explain" -> 0 matches in project code
+- No explainability notebook exists
+- No SHAP waterfall plots, force plots, or summary plots
+- No LIME perturbation experiments
+- No attention map extraction
+- No feature ablation study
+- top3_labels in Cell 4 output is confidence-based ranking, not feature
+  attribution
+
+REQUIREMENT COVERAGE ASSESSMENT: NOT IMPLEMENTED
+
+No explainability analysis of any kind exists in the repository.
+
+MISSING COMPONENTS
+- No SHAP implementation for time-series sequences (e.g., shap.DeepExplainer
+  or shap.GradientExplainer for Keras LSTM)
+- No LIME implementation for video/sequence classification
+- No attention visualization (model uses vanilla LSTM, not attention -- but
+  Grad-CAM on the LSTM output or feature-level analysis is possible)
+- No per-feature importance analysis (e.g., accuracy when zeroing out pose vs
+  hand subsets)
+- No visualization showing which frames or body parts most influenced a
+  prediction
+- No saved explainability plots
+
+RECOMMENDED NEXT STEPS
+1. Minimal explainability (achievable without changing the model): Add a
+   notebook cell using shap.DeepExplainer(model, X_train_sample) to compute
+   SHAP values over the (60, 404) input -> aggregate over frames to identify
+   which features (pose vs left_hand vs right_hand vs velocity) contribute most
+2. Feature ablation: Re-run inference with hand features zeroed out, then with
+   pose zeroed out -- compute accuracy delta per class
+3. Temporal saliency: Compute gradient of output w.r.t. input using
+   tf.GradientTape to identify which frames are most important per prediction
+4. Add a dedicated 05_explainability.ipynb notebook with SHAP summary plots
+   saved to outputs/
+
+
+================================================================================
+Task B-6 — Prediction Reasoning
+================================================================================
+
+REQUIREMENT SUMMARY
+For each prediction, provide human-understandable reasoning: why the model chose
+a particular class, what evidence supported it, and what the alternatives were.
+This goes beyond raw confidence scores.
+
+RELEVANT FILES
+- scripts/04_evaluation.ipynb      (Evaluation notebook with confidence analysis)
+- backend/outputs/                 (7 real API prediction JSON outputs, ~1 MB each)
+
+CURRENT IMPLEMENTATION
+04_evaluation.ipynb provides a structured prediction output per video including:
+
+Cell 4 output format (confirmed from notebook):
+  filename | true_label | pred_label | confidence_pct | correct | top3 | error
+
+Example confirmed outputs:
+  [X]  01_kin.mp4        true=kin        pred=sawatdi     100.0%
+  [v]  01_mak.mp4        true=mak        pred=mak         100.0%
+  [X]  01_mai-di.mp4     true=mai-di     pred=thao-rai     99.8%
+
+Cell 7 produces a confidence distribution histogram (correct vs incorrect) and
+per-class mean confidence bar chart with color coding (green=100% acc,
+orange=partial, red=0%)
+
+Cell 8b produces a per-class accuracy summary table with Videos, Correct,
+Accuracy %, and Mean Confidence %
+
+API outputs in backend/outputs/ (7 x ~1 MB JSON files) contain real inference
+results from the deployed backend service -- these include extracted landmark
+coordinates plus model predictions.
+
+What is missing from "reasoning": The current implementation tells you the
+prediction and confidence. It does not tell you WHICH body parts or WHICH
+FRAMES drove the prediction. The top-3 class list provides alternatives but
+with no explanation of why the model ranked them that way.
+
+EVIDENCE FROM REPOSITORY
+- Cell 4 output in 04_evaluation.ipynb: 34 video predictions confirmed executed
+  before KeyboardInterrupt
+- top3_labels field present in records dict:
+  [(CLASS_NAMES[i], float(proba[i])) for i in top3]
+- Cell 7: correct_conf.mean() and incorrect_conf.mean() -- confidence
+  statistics by outcome
+- Cell 8b: per_class_summary with accuracy and confidence per true class
+- backend/outputs/ contains 7 prediction JSON files (1-1.4 MB each),
+  confirming real API execution
+
+REQUIREMENT COVERAGE ASSESSMENT: PARTIALLY IMPLEMENTED
+
+Prediction confidence and top-3 alternatives are provided. Per-class analysis
+is done. API output format is functional. However, there is no feature-level
+reasoning -- the system cannot explain which gesture components (hand shape,
+pose, motion trajectory) led to the prediction.
+
+MISSING COMPONENTS
+- No feature-level attribution in prediction output (which frames/landmarks
+  contributed)
+- Evaluation interrupted -- KeyboardInterrupt at video 34/50 means full test
+  results (Cell 5 classification report, Cell 6 confusion matrix, Cell 7
+  confidence analysis) were never completed and saved
+- No evaluation_results.csv -- Cell 9 was never reached, so the output file
+  does not exist in outputs/
+- No verbal/textual reasoning attached to predictions
+- No explanation of why incorrect high-confidence predictions occur
+  (e.g., 01_kin.mp4 predicted sawatdi at 100% -- no analysis)
+
+RECOMMENDED NEXT STEPS
+1. Re-run 04_evaluation.ipynb to completion -- do not interrupt it
+2. Save evaluation_results.csv and evaluation_summary.json as committed
+   artifacts
+3. Add a "failure analysis" cell: for each incorrect high-confidence
+   prediction, retrieve the top-3 probabilities and note the closest correct
+   class's rank
+4. Link prediction reasoning to explainability (Task B-5): attach the
+   per-video SHAP contribution to the output DataFrame
+
+
+================================================================================
+Task B-7 — Model Deployment as a Service
+================================================================================
+
+REQUIREMENT SUMMARY
+Deploy the trained model as an accessible service -- typically a REST API, with
+endpoints for receiving input (video/features), running inference, and returning
+structured results. Evidence of the service running (test calls, sample outputs)
+is expected.
+
+RELEVANT FILES
+- backend/app/                                (FastAPI application, compiled .pyc only;
+                                               source .py files absent)
+    __pycache__/main.cpython-311.pyc
+    routes/__pycache__/video_routes.cpython-311.pyc
+    schemas/__pycache__/response_schema.cpython-311.pyc
+    services/__pycache__/mediapipe_service.cpython-311.pyc
+    services/__pycache__/mock_prediction_service.cpython-311.pyc
+    services/__pycache__/model_prediction_service.cpython-311.pyc
+    services/__pycache__/prediction_service.cpython-311.pyc
+    services/__pycache__/video_service.cpython-311.pyc
+    utils/__pycache__/file_utils.cpython-311.pyc
+- backend/.env                                (Service configuration)
+- backend/README.md                           (Service documentation)
+- backend/outputs/                            (7 real prediction output JSONs, ~1 MB each)
+- backend/uploads/                            (7 uploaded .mp4 test videos)
+- models/lstm_model.keras                     (Model served by backend)
+- models/model_info.json                      (Class metadata for inference)
+
+CURRENT IMPLEMENTATION
+A FastAPI backend has been implemented and SUCCESSFULLY EXECUTED -- confirmed by:
+  1. 7 UUID-named MP4 files in backend/uploads/ matching 7 UUID-named JSON
+     files in backend/outputs/
+  2. PREDICTION_MODE=model in .env -- the real model was used, not mock
+  3. JSON output files (~1 MB each) containing extracted MediaPipe landmark
+     coordinates plus model predictions
+
+Architecture (from backend/README.md):
+  Flutter Frontend
+    -> Upload Video
+  FastAPI Route Layer   (video_routes.py)
+    -> Video Service    (video_service.py)
+    -> MediaPipe Service (mediapipe_service.py)
+       Extract Pose + Hand landmarks
+    -> Prediction Service (model_prediction_service.py)
+       Load lstm_model.keras, run inference
+    -> Return prediction to Flutter
+
+Environment configuration (backend/.env):
+  PREDICTION_MODE=model
+  MODEL_PATH=../models/lstm_model.keras
+  MODEL_INFO_PATH=../models/model_info.json
+
+Service components confirmed (via .pyc evidence):
+  main.py                    -- FastAPI app entrypoint
+  video_routes.py            -- API route handlers
+  response_schema.py         -- Pydantic response schemas
+  mediapipe_service.py       -- MediaPipe landmark extraction
+  mock_prediction_service.py -- Mock service for testing
+  model_prediction_service.py-- Real LSTM inference
+  prediction_service.py      -- Prediction router/dispatcher
+  video_service.py           -- Video file management
+  file_utils.py              -- File utility functions
+
+Flutter mobile frontend exists at termtem_signlanguage_ai/ -- confirms
+end-to-end client integration is the target architecture.
+
+EVIDENCE FROM REPOSITORY
+- 7 matching UUID pairs in uploads/ + outputs/ confirm live API execution
+- Output file sizes (816 KB - 1.4 MB) confirm full landmark JSON was generated
+- PREDICTION_MODE=model in .env confirms real model inference was activated
+- All 9 service modules present as compiled .pyc (Python 3.11)
+- uvicorn app.main:app --reload startup command documented in backend/README.md
+- API available at http://127.0.0.1:8000 per documentation
+
+REQUIREMENT COVERAGE ASSESSMENT: PARTIALLY IMPLEMENTED
+
+The service has been implemented and demonstrably executed (7 real API calls
+with outputs saved). However, the SOURCE CODE HAS BEEN EXCLUDED FROM THE
+REPOSITORY (only .pyc compiled files remain -- the .py source files are
+gitignored or deleted), making the implementation non-reviewable,
+non-portable, and not reproducible from the repo alone.
+
+MISSING COMPONENTS
+- CRITICAL: Source .py files are absent -- only compiled .pyc files exist;
+  the actual implementation logic is inaccessible
+- No requirements.txt for the backend -- cannot reproduce the environment
+- No Docker or docker-compose -- no containerized deployment
+- No API documentation beyond README -- no Swagger/OpenAPI schema committed,
+  no example curl commands
+- No unit or integration tests for API endpoints
+- No error response examples -- only successful prediction outputs saved
+- No .env.example file referenced in README (README says cp .env.example .env
+  but no .env.example exists)
+- Evaluation interrupted (Cell 4 KeyboardInterrupt) -- full end-to-end test
+  coverage is incomplete
+- No health check endpoint documentation
+- No rate limiting or input validation documentation
+
+RECOMMENDED NEXT STEPS
+1. Immediately restore source files -- commit all backend/app/**/*.py source
+   files; the .pyc files alone make the codebase non-auditable
+2. Add a backend/requirements.txt capturing FastAPI, uvicorn, mediapipe,
+   tensorflow, python-dotenv, opencv-python
+3. Add a backend/.env.example template
+4. Add a docker-compose.yml to containerize backend + model volume
+5. Add at least one API test file (backend/tests/test_video_endpoint.py)
+   with a sample curl request and expected response
+
+
+================================================================================
+Overall Project Status
+================================================================================
+
+FULLY COMPLETED REQUIREMENTS
++-----+-------------------------------+----------------------------------------+
+| B-1 | Input Data Description        | Comprehensive 11-section EDA notebook  |
+|     | and Exploration               | with schema validation, quality audit  |
+|     |                               | (10 checks), category/split analysis,  |
+|     |                               | word-level analysis, and dashboards    |
++-----+-------------------------------+----------------------------------------+
+| B-2 | Model Training                | Complete preprocessing pipeline        |
+|     | Implementation                | (MediaPipe -> keypoints -> features -> |
+|     |                               | augmentation -> normalization), LSTM   |
+|     |                               | architecture, tf.data pipeline with    |
+|     |                               | MixUp, callbacks, evaluation, and all  |
+|     |                               | artifacts saved                        |
++-----+-------------------------------+----------------------------------------+
+
+PARTIALLY COMPLETED REQUIREMENTS
++-----+-------------------------------+--------------------+--------------------+
+| B-4 | Model Versioning              | Multiple training  | No MLflow/W&B; no  |
+|     |                               | iterations evident | experiment         |
+|     |                               | in git history;    | comparison table;  |
+|     |                               | inline comments    | no parameter sweep |
+|     |                               | document prior     | log                |
+|     |                               | values; final      |                    |
+|     |                               | model + metadata   |                    |
+|     |                               | saved              |                    |
++-----+-------------------------------+--------------------+--------------------+
+| B-6 | Prediction Reasoning          | Confidence scores, | Evaluation         |
+|     |                               | top-3 predictions, | interrupted        |
+|     |                               | per-class accuracy,| (34/50 videos);    |
+|     |                               | confidence plots,  | no feature         |
+|     |                               | 7 real API outputs | attribution; no    |
+|     |                               |                    | failure analysis   |
++-----+-------------------------------+--------------------+--------------------+
+| B-7 | Model Deployment              | FastAPI service    | Source .py files   |
+|     | as a Service                  | implemented and    | absent (only .pyc);|
+|     |                               | proven to execute  | no requirements    |
+|     |                               | (7 real API calls);| .txt; no Docker;   |
+|     |                               | Flutter frontend;  | no tests           |
+|     |                               | env config present |                    |
++-----+-------------------------------+--------------------+--------------------+
+
+MISSING REQUIREMENTS
++-----+-------------------------------+----------------------------------------+
+| B-3 | Model Fairness Analysis       | Not implemented -- no fairness metrics,|
+|     |                               | no subgroup analysis, no fairness      |
+|     |                               | toolkit imported                       |
++-----+-------------------------------+----------------------------------------+
+| B-5 | Model Explainability          | Not implemented -- no SHAP, no LIME,   |
+|     |                               | no attention visualization, no feature |
+|     |                               | ablation                               |
++-----+-------------------------------+----------------------------------------+
+
+HIGHEST PRIORITY MISSING COMPONENTS
+  1. Restore backend source code -- .pyc-only repository prevents any review
+     of the most deployed component
+  2. Complete evaluation run -- re-run 04_evaluation.ipynb without interruption;
+     commit saved CSVs/PNGs
+  3. Model fairness analysis -- even a minimal per-class performance breakdown
+     framed as proxy-fairness would satisfy B-3
+  4. SHAP explainability notebook -- shap.DeepExplainer on the existing Keras
+     model is a ~30-line implementation
+  5. MLflow integration -- add 5 lines to 03_training.ipynb to log
+     hyperparameters and metrics per run
+
+SUGGESTED IMPLEMENTATION ORDER
+  Step 1: Restore backend/app/**/*.py source files
+          (unblocks B-7 review)
+  Step 2: Re-run and commit 04_evaluation.ipynb with full outputs
+          (completes B-6)
+  Step 3: Create 05_explainability.ipynb with SHAP DeepExplainer +
+          feature ablation
+          (implements B-5)
+  Step 4: Create 06_fairness.ipynb with per-class/per-signer analysis +
+          MetricFrame from fairlearn
+          (implements B-3)
+  Step 5: Add MLflow logging to 03_training.ipynb and re-run
+          (upgrades B-4 to Fully Implemented)
+  Step 6: Add requirements.txt + docker-compose.yml to backend
+          (upgrades B-7)
+  Step 7: Reconcile 10-class vs 25-class model discrepancy in training
+          notebooks
+
+SUMMARY
+The project has a strong, professionally implemented data pipeline (B-1) and
+training system (B-2). The deployment infrastructure exists and has been
+validated by real API calls, but the source code was not committed. The three
+most critical academic gaps are fairness analysis (B-3, fully absent),
+explainability (B-5, fully absent), and completing the interrupted evaluation
+run (B-6).
