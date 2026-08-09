@@ -1,5 +1,32 @@
 import 'package:flutter/material.dart';
+import '../widgets/termtem_header.dart';
 import 'practice_modal.dart';
+
+class Lesson {
+  final String title;
+  final String description;
+  final String category;
+  final String level;
+  final double progress;
+  final int stepsDone;
+  final int totalSteps;
+  final bool isLocked;
+  final String? unlockText;
+  final IconData icon;
+
+  Lesson({
+    required this.title,
+    required this.description,
+    required this.category,
+    required this.level,
+    required this.progress,
+    required this.stepsDone,
+    required this.totalSteps,
+    this.isLocked = false,
+    this.unlockText,
+    required this.icon,
+  });
+}
 
 class EducationScreen extends StatefulWidget {
   const EducationScreen({super.key});
@@ -9,334 +36,557 @@ class EducationScreen extends StatefulWidget {
 }
 
 class _EducationScreenState extends State<EducationScreen> {
-  final List<Map<String, String>> words = [
-    {"word": "Hello",   "category": "GREETINGS"},
-    {"word": "Thanks",  "category": "MANNERS"},
-    {"word": "Love",    "category": "EMOTION"},
-    {"word": "Help",    "category": "ASSISTANCE"},
-    {"word": "Sorry",   "category": "MANNERS"},
-    {"word": "Eat",     "category": "DAILY LIFE"},
-    {"word": "Water",   "category": "DAILY LIFE"},
-    {"word": "Family",  "category": "RELATIONSHIPS"},
+  String _searchQuery = '';
+  String _selectedCategory = 'All Lessons';
+
+  final List<String> _categories = [
+    'All Lessons',
+    'Basics',
+    'Food',
+    'Travel',
+    'Emergency',
   ];
 
-  String query = '';
-  int _challengeProgress = 2;
+  final Lesson _featuredLesson = Lesson(
+    title: 'Essential Greetings',
+    description:
+        'Learn the polite ways to say hello and thank you in Thai Sign Language.',
+    category: 'Basics',
+    level: 'Beginner',
+    progress: 0.0,
+    stepsDone: 0,
+    totalSteps: 5,
+    icon: Icons.waving_hand,
+  );
 
-  final ScrollController _scrollController = ScrollController();
-  final GlobalKey _searchBarKey = GlobalKey();
-  bool _showStickySearch = false;
+  final List<Lesson> _allLessons = [
+    Lesson(
+      title: 'Family Members',
+      description: 'Learn how to refer to family members.',
+      category: 'Basics',
+      level: 'Beginner',
+      progress: 0.75,
+      stepsDone: 3,
+      totalSteps: 4,
+      icon: Icons.family_restroom,
+    ),
+    Lesson(
+      title: 'Ordering Food',
+      description: 'Essential signs for ordering at a restaurant.',
+      category: 'Food',
+      level: 'Intermediate',
+      progress: 0.2,
+      stepsDone: 2,
+      totalSteps: 10,
+      icon: Icons.restaurant,
+    ),
+    Lesson(
+      title: 'Directions',
+      description: 'How to ask for and give directions.',
+      category: 'Travel',
+      level: 'Intermediate',
+      progress: 0.0,
+      stepsDone: 0,
+      totalSteps: 8,
+      icon: Icons.map,
+    ),
+    Lesson(
+      title: 'Medical Help',
+      description: 'Critical signs for emergencies.',
+      category: 'Emergency',
+      level: 'Critical',
+      progress: 0.0,
+      stepsDone: 0,
+      totalSteps: 5,
+      icon: Icons.local_hospital,
+    ),
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
+  final Lesson _lockedLesson = Lesson(
+    title: 'Social Chat',
+    description: 'Casual conversation signs.',
+    category: 'Advanced',
+    level: 'Advanced',
+    progress: 0.0,
+    stepsDone: 0,
+    totalSteps: 10,
+    isLocked: true,
+    unlockText: 'Unlock at Level 5',
+    icon: Icons.chat_bubble,
+  );
 
-  void _onScroll() {
-    final ctx = _searchBarKey.currentContext;
-    if (ctx == null) return;
-    final box = ctx.findRenderObject() as RenderBox?;
-    if (box == null) return;
-    final topInViewport = box.localToGlobal(Offset.zero).dy;
-    final isHidden = topInViewport < -(box.size.height);
-    if (isHidden != _showStickySearch) {
-      setState(() => _showStickySearch = isHidden);
+  // Opens a lesson popup, unless that lesson is locked.
+  void _openPracticeModal(Lesson lesson) {
+    if (lesson.isLocked) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('This lesson is locked!')));
+      return;
     }
-  }
 
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _openPractice(String word, String category) {
     showDialog(
+      // Displays a popup above the current screen
       context: context,
-      barrierColor: Colors.black.withOpacity(0.5),
-      builder: (_) => PracticeModal(word: word, category: category),
-    );
-  }
-
-  void _openChallenge() {
-    if (_challengeProgress >= 5) return;
-    final shuffled = List.of(words)..shuffle();
-    final pick = shuffled.first;
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.5),
-      builder: (_) => PracticeModal(
-        word: pick['word']!,
-        category: pick['category']!,
-        isChallengeMode: true,
-        challengeProgress: _challengeProgress,
-        onWordDone: () =>
-            setState(() => _challengeProgress = (_challengeProgress + 1).clamp(0, 5)),
+      builder: (context) => PracticeModal(
+        word: lesson.title,
+        category: lesson.category,
+        isChallengeMode: false,
+        onWordDone: () {
+          // Add logic to update progress
+        },
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = words
-        .where((w) => w["word"]!.toLowerCase().contains(query.toLowerCase()))
-        .toList();
+    // Filter lessons
+    final List<Lesson> filteredLessons = _allLessons.where((lesson) {
+      final matchesSearch =
+          lesson.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          lesson.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory =
+          _selectedCategory == 'All Lessons' ||
+          lesson.category == _selectedCategory;
+      return matchesSearch && matchesCategory;
+    }).toList();
 
-    return Stack(
-      children: [
-        // ── Main scroll ──────────────────────────────────────────────────────
-        CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 60, 24, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Education Library',
-                      style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1.5),
-                    ),
+    return Container(
+      color: const Color(0xFFF9F9FC), // Background
+      child: Column(
+        children: [
+          const TermtemHeader(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 24.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSearchBar(),
+                  const SizedBox(height: 20),
+                  _buildCategoryChips(),
+                  const SizedBox(height: 24),
+                  if (_searchQuery.isEmpty &&
+                      _selectedCategory == 'All Lessons') ...[
+                    _buildFeaturedLesson(),
                     const SizedBox(height: 24),
-                    _buildSearchBar(key: _searchBarKey),
-                    const SizedBox(height: 24),
-                    _buildFilterChips(),
-                    const SizedBox(height: 28),
-                    _buildDailyChallengeCard(),
-                    const SizedBox(height: 28),
-                    const Text(
-                      'All Signs',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5),
-                    ),
-                    const SizedBox(height: 16),
                   ],
+                  const Text(
+                    'Lessons',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1C1E),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildLessonGrid(filteredLessons),
+                  const SizedBox(height: 24),
+                  if (_searchQuery.isEmpty &&
+                      _selectedCategory == 'All Lessons') ...[
+                    _buildLockedLesson(),
+                    const SizedBox(height: 32),
+                    _buildMotivationalBubble(),
+                  ],
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return TextField(
+      onChanged: (value) {
+        setState(() {
+          _searchQuery = value;
+        });
+      },
+      decoration: InputDecoration(
+        hintText: 'Search lessons...',
+        hintStyle: const TextStyle(color: Color(0xFF564338)),
+        prefixIcon: const Icon(Icons.search, color: Color(0xFF9B4500)),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30.0),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30.0),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30.0),
+          borderSide: const BorderSide(color: Color(0xFF9B4500), width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChips() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _categories.map((category) {
+          final isSelected = _selectedCategory == category;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ChoiceChip(
+              label: Text(category),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
+                }
+              },
+              selectedColor: const Color(0xFF9B4500),
+              backgroundColor: Colors.white,
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : const Color(0xFF564338),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isSelected
+                      ? const Color(0xFF9B4500)
+                      : Colors.grey.shade300,
                 ),
               ),
             ),
+          );
+        }).toList(),
+      ),
+    );
+  }
 
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.85,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => GestureDetector(
-                    onTap: () => _openPractice(
-                        filtered[index]['word']!, filtered[index]['category']!),
-                    child: _buildWordCard(filtered[index]),
+  Widget _buildFeaturedLesson() {
+    return GestureDetector(
+      onTap: () => _openPracticeModal(_featuredLesson),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF9B4500).withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
                   ),
-                  childCount: filtered.length,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFDBC9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'NEW LESSON',
+                    style: TextStyle(
+                      color: Color(0xFF9B4500),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
                 ),
+                const Spacer(),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: Color(0xFF9B4500),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9F9FC),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    _featuredLesson.icon,
+                    size: 30,
+                    color: const Color(0xFF9B4500),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _featuredLesson.title,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1C1E),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _featuredLesson.description,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF564338),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                SizedBox(
+                  width: 70,
+                  height: 28,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        child: _buildAvatarCircle(const Color(0xFFC6E7FF)),
+                      ),
+                      Positioned(
+                        left: 20,
+                        child: _buildAvatarCircle(const Color(0xFF8AF5B3)),
+                      ),
+                      Positioned(
+                        left: 40,
+                        child: _buildAvatarCircle(const Color(0xFFFFDBC9)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Learners joined today',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF564338),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarCircle(Color color) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+      child: const Icon(Icons.person, size: 16, color: Colors.black26),
+    );
+  }
+
+  Widget _buildLessonGrid(List<Lesson> lessons) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount = constraints.maxWidth > 600 ? 2 : 1;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: crossAxisCount == 1 ? 2.5 : 1.2,
+            mainAxisExtent: 140, // Fixed height for cards
+          ),
+          itemCount: lessons.length,
+          itemBuilder: (context, index) {
+            return _buildLessonCard(lessons[index]);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildLessonCard(Lesson lesson) {
+    return GestureDetector(
+      onTap: () => _openPracticeModal(lesson),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9F9FC),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                lesson.icon,
+                size: 24,
+                color: const Color(0xFF006D3F),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC6E7FF).withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      lesson.level.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF006D3F),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    lesson.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1C1E),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    lesson.description,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF564338),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: lesson.progress,
+                            minHeight: 6,
+                            backgroundColor: const Color(0xFFF9F9FC),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFF006D3F),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '${lesson.stepsDone}/${lesson.totalSteps} steps',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF564338),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
         ),
-
-        // ── Sticky search bar ────────────────────────────────────────────────
-        AnimatedSlide(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeInOut,
-          offset: _showStickySearch ? Offset.zero : const Offset(0, -1),
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 220),
-            opacity: _showStickySearch ? 1.0 : 0.0,
-            child: IgnorePointer(
-              ignoring: !_showStickySearch,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 52, 16, 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: _buildSearchBar(),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Search bar ─────────────────────────────────────────────────────────────
-  Widget _buildSearchBar({Key? key}) {
-    return TextField(
-      key: key,
-      onChanged: (v) => setState(() => query = v),
-      decoration: InputDecoration(
-        hintText: "Search sign language...",
-        prefixIcon: const Icon(Icons.search, color: Colors.grey),
-        filled: true,
-        fillColor: const Color(0xFFF5F5F5),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
       ),
     );
   }
 
-  // ── Filter chips ───────────────────────────────────────────────────────────
-  Widget _buildFilterChips() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(children: [
-        _HoverChip(label: "Daily",   isSelected: true),
-        _HoverChip(label: "Animals", isSelected: false),
-        _HoverChip(label: "Food",    isSelected: false),
-        _HoverChip(label: "Travel",  isSelected: false),
-      ]),
-    );
-  }
-
-  // ── Daily Challenge card ───────────────────────────────────────────────────
-  Widget _buildDailyChallengeCard() {
-    final done = _challengeProgress >= 5;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Daily Challenge',
-          style: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.5),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'PRACTICE MODE',
-                  style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Master 5 New Words',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: List.generate(
-                  5,
-                  (i) => Container(
-                    width: 28,
-                    height: 6,
-                    margin: const EdgeInsets.only(right: 6),
-                    decoration: BoxDecoration(
-                      color: i < _challengeProgress
-                          ? Colors.white
-                          : Colors.white24,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                done
-                    ? '🎉 Completed today!'
-                    : '$_challengeProgress / 5 words done today',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
-              ),
-              const SizedBox(height: 20),
-              _HoverStartButton(
-                done: done,
-                onTap: done ? null : _openChallenge,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Word card ──────────────────────────────────────────────────────────────
-  Widget _buildWordCard(Map<String, String> item) {
+  Widget _buildLockedLesson() {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
+        color: const Color(0xFFF0F0F0),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade300),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(20)),
-              child: const Center(
-                child: Icon(Icons.play_circle_fill, size: 40, color: Colors.black),
-              ),
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: const Icon(Icons.lock, size: 24, color: Colors.grey),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          const SizedBox(width: 16),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['category']!,
+                  _lockedLesson.title,
                   style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 1),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  item['word']!,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5),
+                  _lockedLesson.unlockText ?? 'Locked',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -345,117 +595,45 @@ class _EducationScreenState extends State<EducationScreen> {
       ),
     );
   }
-}
 
-// ── Hover filter chip ──────────────────────────────────────────────────────────
-class _HoverChip extends StatefulWidget {
-  final String label;
-  final bool isSelected;
-  const _HoverChip({required this.label, required this.isSelected});
-
-  @override
-  State<_HoverChip> createState() => _HoverChipState();
-}
-
-class _HoverChipState extends State<_HoverChip> {
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _hovered || _pressed;
-
-    final Color bg = widget.isSelected
-        ? (active ? Colors.grey[800]! : Colors.black)
-        : (active ? Colors.grey[300]! : const Color(0xFFEEEEEE));
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          margin: const EdgeInsets.only(right: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(30),
+  Widget _buildMotivationalBubble() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF9B4500).withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
-          child: Text(
-            widget.label,
-            style: TextStyle(
-              color: widget.isSelected ? Colors.white : Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
+        ],
       ),
-    );
-  }
-}
-
-// ── Hover Start Learning button ────────────────────────────────────────────────
-class _HoverStartButton extends StatefulWidget {
-  final bool done;
-  final VoidCallback? onTap;
-  const _HoverStartButton({required this.done, required this.onTap});
-
-  @override
-  State<_HoverStartButton> createState() => _HoverStartButtonState();
-}
-
-class _HoverStartButtonState extends State<_HoverStartButton> {
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = (_hovered || _pressed) && !widget.done;
-
-    final Color bg = widget.done
-        ? Colors.white24
-        : active
-            ? Colors.grey[200]!
-            : Colors.white;
-
-    final Color textColor = widget.done
-        ? Colors.white54
-        : active
-            ? Colors.black87
-            : Colors.black;
-
-    return MouseRegion(
-      cursor: widget.done
-          ? SystemMouseCursors.basic
-          : SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(16),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFDBC9),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.pets, color: Color(0xFF9B4500), size: 24),
           ),
-          child: Text(
-            widget.done ? 'Come back tomorrow!' : 'Start Learning →',
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Text(
+              "You're doing great! You've learned 5 new signs today. Keep that streak going!",
+              style: TextStyle(
+                fontSize: 13,
+                color: Color(0xFF1A1C1E),
+                height: 1.4,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

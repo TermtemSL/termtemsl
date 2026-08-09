@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'translate_screen.dart';
-import 'chat_screen.dart';
+import '../features/chat/chat_screen.dart';
 import 'education_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
@@ -168,31 +168,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Termtem',
-          style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Builder(
-              builder: (btnCtx) => _HoverAvatar(
-                isLoggedIn: _isLoggedIn,
-                initial: _isLoggedIn && _userName.isNotEmpty
-                    ? _userName[0].toUpperCase()
-                    : null,
-                onTap: () => _onAvatarTap(btnCtx),
-              ),
-            ),
-          ),
-        ],
-      ),
+
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -212,16 +188,40 @@ class _MainScreenState extends State<MainScreen> {
             unselectedItemColor: Colors.grey,
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
-            items: const [
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.interpreter_mode), label: 'Translate'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.forum), label: 'Chat'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.school), label: 'Education'),
-            ],
+            items: [
+                      BottomNavigationBarItem(
+                        icon: Image.asset(
+                          'assets/icons/home.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Image.asset(
+                          'assets/icons/translate.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        label: 'Translate',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Image.asset(
+                          'assets/icons/chatbot.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        label: 'Chat',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Image.asset(
+                          'assets/icons/education.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        label: 'Education',
+                      ),
+                    ],
           ),
         ),
       ),
