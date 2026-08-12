@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/chat_colors.dart';
-import 'circle_icon_button.dart';
+import '../../../shared/widgets/circle_icon_button.dart';
 
 class ChatInputBar extends StatelessWidget {
   final TextEditingController controller;

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import '../widgets/termtem_header.dart';
+import '../shared/widgets/termtem_header.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import 'package:video_player/video_player.dart';
 

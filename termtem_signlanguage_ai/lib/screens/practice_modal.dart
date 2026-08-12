@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../shared/widgets/hover_button.dart';
 
 class PracticeModal extends StatefulWidget {
   final String word;
@@ -56,7 +57,7 @@ class _PracticeModalState extends State<PracticeModal> {
           // Close button
           Align(
             alignment: Alignment.topLeft,
-            child: _HoverCloseButton(onTap: () => Navigator.of(context).pop()),
+            child: HoverCloseButton(onTap: () => Navigator.of(context).pop()),
           ),
           const SizedBox(height: 24),
 
@@ -100,7 +101,7 @@ class _PracticeModalState extends State<PracticeModal> {
           Row(
             children: [
               Expanded(
-                child: _HoverButton(
+                child: HoverButton(
                   label: 'Maybe later',
                   filled: false,
                   onTap: () => Navigator.of(context).pop(),
@@ -108,7 +109,7 @@ class _PracticeModalState extends State<PracticeModal> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _HoverButton(
+                child: HoverButton(
                   label: "Let's go! 🤙",
                   filled: true,
                   onTap: () => setState(() => _stage = 'practice'),
@@ -130,7 +131,7 @@ class _PracticeModalState extends State<PracticeModal> {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
           child: Row(
             children: [
-              _HoverCloseButton(onTap: () => Navigator.of(context).pop()),
+              HoverCloseButton(onTap: () => Navigator.of(context).pop()),
               const SizedBox(width: 12),
               Text(
                 widget.word,
@@ -233,7 +234,7 @@ class _PracticeModalState extends State<PracticeModal> {
               ],
 
               // Mark as done / Done practicing button
-              _HoverButton(
+              HoverButton(
                 label: widget.isChallengeMode
                     ? '✅  Mark as done'
                     : '✅  Done practicing',
@@ -337,113 +338,4 @@ class _VideoPane extends StatelessWidget {
   }
 }
 
-// ── Reusable hover button ──────────────────────────────────────────────────────
-class _HoverButton extends StatefulWidget {
-  final String label;
-  final bool filled;       // true = black bg, false = light bg
-  final bool fullWidth;
-  final VoidCallback onTap;
-
-  const _HoverButton({
-    required this.label,
-    required this.filled,
-    required this.onTap,
-    this.fullWidth = false,
-  });
-
-  @override
-  State<_HoverButton> createState() => _HoverButtonState();
-}
-
-class _HoverButtonState extends State<_HoverButton> {
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _hovered || _pressed;
-
-    final Color bg = widget.filled
-        ? (active ? Colors.grey[800]! : Colors.black)
-        : (active ? Colors.grey[200]! : const Color(0xFFF5F5F5));
-
-    final Color textColor = widget.filled
-        ? Colors.white
-        : (active ? Colors.black : Colors.black87);
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: widget.fullWidth ? double.infinity : null,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Text(
-              widget.label,
-              style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Hover close button (X) ─────────────────────────────────────────────────────
-class _HoverCloseButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _HoverCloseButton({required this.onTap});
-
-  @override
-  State<_HoverCloseButton> createState() => _HoverCloseButtonState();
-}
-
-class _HoverCloseButtonState extends State<_HoverCloseButton> {
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _hovered || _pressed;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: active ? Colors.grey[300]! : const Color(0xFFF5F5F5),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.close,
-            size: 18,
-            color: active ? Colors.black : Colors.black54,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// HoverButton, HoverCloseButton → see lib/shared/widgets/hover_button.dart

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// ignore: unused_import — HoverAvatar will be wired in Phase 6 shell refactor
+import '../shared/widgets/hover_avatar.dart';
 import 'translate_screen.dart';
 import '../features/chat/chat_screen.dart';
 import 'education_screen.dart';
@@ -229,63 +231,4 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-// ── Hover avatar button ────────────────────────────────────────────────────────
-class _HoverAvatar extends StatefulWidget {
-  final bool isLoggedIn;
-  final String? initial;
-  final VoidCallback onTap;
-
-  const _HoverAvatar({
-    required this.isLoggedIn,
-    required this.onTap,
-    this.initial,
-  });
-
-  @override
-  State<_HoverAvatar> createState() => _HoverAvatarState();
-}
-
-class _HoverAvatarState extends State<_HoverAvatar> {
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _hovered || _pressed;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: widget.isLoggedIn
-                ? (active ? Colors.grey[800]! : Colors.black)
-                : (active ? Colors.grey[300]! : Colors.grey[200]!),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: widget.isLoggedIn && widget.initial != null
-                ? Text(
-                    widget.initial!,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                  )
-                : Icon(Icons.person,
-                    color: active ? Colors.black : Colors.black54, size: 20),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// HoverAvatar → see lib/shared/widgets/hover_avatar.dart

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/termtem_header.dart';
+import '../shared/widgets/termtem_header.dart';
 import 'practice_modal.dart';
 
 class Lesson {

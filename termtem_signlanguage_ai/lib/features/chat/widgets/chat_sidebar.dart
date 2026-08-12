@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/chat_session.dart';
 import '../theme/chat_colors.dart';
 import 'chat_session_tile.dart';
-import 'circle_icon_button.dart';
+import '../../../shared/widgets/circle_icon_button.dart';
 import '../data/mock_chat_data.dart';
 
 class ChatSidebar extends StatefulWidget {

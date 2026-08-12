@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'; // Flutter Widgets package for building UI components
-import '../widgets/termtem_header.dart';
+import '../shared/widgets/termtem_header.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key}); // Constructor for HomeScreen widget

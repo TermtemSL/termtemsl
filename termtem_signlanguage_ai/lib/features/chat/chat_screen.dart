@@ -7,8 +7,7 @@ import 'widgets/chat_input_bar.dart'; // Imports the message input widget
 import 'widgets/chat_message_bubble.dart';
 import 'widgets/chat_sidebar.dart'; // Import chat history sidebar widget
 import 'widgets/suggested_chips.dart';
-import 'widgets/circle_icon_button.dart'; // Imports a reusable circular button
-import '../../widgets/termtem_header.dart';
+import '../../shared/widgets/termtem_header.dart';
 
 class ChatScreen extends StatefulWidget {
   // StatefulWidget for the main chat screen, managing chat messages, sidebar, and input bar data can change
