@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 // ignore: unused_import — HoverAvatar will be wired in Phase 6 shell refactor
 import '../shared/widgets/hover_avatar.dart';
-import 'translate_screen.dart';
+import '../features/translate/translate_screen.dart';
 import '../features/chat/chat_screen.dart';
-import 'education_screen.dart';
+import '../features/education/education_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
 import 'setting_screen.dart';
-import 'home_screen.dart';
+import '../features/home/home_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

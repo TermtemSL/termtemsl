@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
-import '../theme/chat_colors.dart';
+import '../../../core/theme/app_colors.dart';
 
 class ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
@@ -17,7 +17,7 @@ class ChatMessageBubble extends StatelessWidget {
         children: [
           Text(
             message.text,
-            style: const TextStyle(color: ChatColors.textDark, fontSize: 15, height: 1.45),
+            style: const TextStyle(color: AppColors.textDark, fontSize: 15, height: 1.45),
           ),
           const SizedBox(height: 12),
           GestureDetector(
@@ -29,7 +29,7 @@ class ChatMessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: ChatColors.primary,
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Row(
@@ -53,7 +53,7 @@ class ChatMessageBubble extends StatelessWidget {
         children: [
           Text(
             message.text,
-            style: const TextStyle(color: ChatColors.textDark, fontSize: 15, height: 1.45),
+            style: const TextStyle(color: AppColors.textDark, fontSize: 15, height: 1.45),
           ),
           const SizedBox(height: 12),
           ClipRRect(
@@ -84,11 +84,11 @@ class ChatMessageBubble extends StatelessWidget {
                         width: 56,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: ChatColors.primary.withOpacity(0.92),
+                          color: AppColors.primary.withValues(alpha: 0.92),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: ChatColors.primary.withOpacity(0.25),
+                              color: AppColors.primary.withValues(alpha: 0.25),
                               blurRadius: 18,
                               offset: const Offset(0, 8),
                             ),
@@ -109,13 +109,13 @@ class ChatMessageBubble extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.92),
+                      color: Colors.white.withValues(alpha: 0.92),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       message.videoLabel ?? "Sign Language Animation",
                       style: const TextStyle(
-                        color: ChatColors.primary,
+                        color: AppColors.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                       ),
@@ -131,7 +131,7 @@ class ChatMessageBubble extends StatelessWidget {
       content = Text(
         message.text,
         style: TextStyle(
-          color: message.isUser ? const Color(0xFF004460) : ChatColors.textDark,
+          color: message.isUser ? const Color(0xFF004460) : AppColors.textDark,
           fontSize: 15,
           height: 1.45,
         ),
@@ -144,17 +144,17 @@ class ChatMessageBubble extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: message.isUser ? ChatColors.tertiaryLight : Colors.white,
+        color: message.isUser ? AppColors.tertiaryLight : Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(28),
           topRight: const Radius.circular(28),
           bottomLeft: Radius.circular(message.isUser ? 28 : 6),
           bottomRight: Radius.circular(message.isUser ? 6 : 28),
         ),
-        border: message.isUser ? null : Border.all(color: ChatColors.surfaceVariant),
+        border: message.isUser ? null : Border.all(color: AppColors.surfaceVariant),
         boxShadow: [
           BoxShadow(
-            color: ChatColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -180,8 +180,8 @@ class ChatMessageBubble extends StatelessWidget {
         children: [
           const CircleAvatar(
             radius: 17,
-            backgroundColor: ChatColors.primaryLight,
-            child: Icon(Icons.pets, color: ChatColors.primary, size: 18),
+            backgroundColor: AppColors.primaryLight,
+            child: Icon(Icons.pets, color: AppColors.primary, size: 18),
           ),
           const SizedBox(width: 10),
           Flexible(child: bubble),

@@ -1,5 +1,5 @@
 ﻿import 'package:flutter/material.dart';
-import '../../../shared/widgets/termtem_header.dart';
+import '../../shared/widgets/termtem_header.dart';
 import '../../../core/theme/app_colors.dart';
 import 'models/lesson.dart';
 import 'practice_modal.dart';

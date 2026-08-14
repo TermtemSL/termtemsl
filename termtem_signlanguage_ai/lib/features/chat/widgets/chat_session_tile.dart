@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/chat_session.dart';
-import '../theme/chat_colors.dart';
+import '../../../core/theme/app_colors.dart';
 
 class ChatSessionTile extends StatefulWidget {
   final ChatSession session;
@@ -39,24 +39,24 @@ class _ChatSessionTileState extends State<ChatSessionTile> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: selected
-                ? ChatColors.secondaryLight
+                ? AppColors.secondaryLight
                 : active
-                    ? ChatColors.primaryLight.withOpacity(0.6)
+                    ? AppColors.primaryLight.withValues(alpha: 0.6)
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(18),
             border: selected
-                ? Border.all(color: ChatColors.primary.withOpacity(0.25))
+                ? Border.all(color: AppColors.primary.withValues(alpha: 0.25))
                 : Border.all(color: Colors.transparent),
           ),
           child: Row(
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: selected ? Colors.white : ChatColors.primaryLight,
+                backgroundColor: selected ? Colors.white : AppColors.primaryLight,
                 child: Icon(
                   Icons.chat_bubble_outline,
                   size: 16,
-                  color: selected ? ChatColors.primary : ChatColors.textSoft,
+                  color: selected ? AppColors.primary : AppColors.textSoft,
                 ),
               ),
               const SizedBox(width: 10),
@@ -71,7 +71,7 @@ class _ChatSessionTileState extends State<ChatSessionTile> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: selected ? ChatColors.primary : ChatColors.textDark,
+                        color: selected ? AppColors.primary : AppColors.textDark,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -79,7 +79,7 @@ class _ChatSessionTileState extends State<ChatSessionTile> {
                       widget.session.preview,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11, color: ChatColors.textSoft),
+                      style: const TextStyle(fontSize: 11, color: AppColors.textSoft),
                     ),
                   ],
                 ),
@@ -92,7 +92,7 @@ class _ChatSessionTileState extends State<ChatSessionTile> {
                     child: Icon(
                       Icons.delete_outline,
                       size: 16,
-                      color: selected ? ChatColors.primary : ChatColors.textSoft,
+                      color: selected ? AppColors.primary : AppColors.textSoft,
                     ),
                   ),
                 ),

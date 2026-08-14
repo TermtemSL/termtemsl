@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'data/mock_chat_data.dart';
 import 'models/chat_message.dart'; // Imports the ChatMessage data model
-import 'theme/chat_colors.dart'; // Imports colours used by the chat page
+import '../../core/theme/app_colors.dart';
 import 'widgets/chat_input_bar.dart'; // Imports the message input widget
 import 'widgets/chat_message_bubble.dart';
 import 'widgets/chat_sidebar.dart'; // Import chat history sidebar widget
@@ -255,7 +255,7 @@ class _ChatScreenState extends State<ChatScreen>
           Icon(
             icon,
             size: 20,
-            color: selected ? ChatColors.primary : Colors.grey,
+            color: selected ? AppColors.primary : Colors.grey,
           ),
           const SizedBox(width: 12),
           Text(
@@ -266,7 +266,7 @@ class _ChatScreenState extends State<ChatScreen>
           ),
           const Spacer(),
           if (selected)
-            const Icon(Icons.check, size: 16, color: ChatColors.primary),
+            const Icon(Icons.check, size: 16, color: AppColors.primary),
         ],
       ),
     );
@@ -279,7 +279,7 @@ class _ChatScreenState extends State<ChatScreen>
         final isDesktop = constraints.maxWidth >= 700;
 
         return Container(
-          color: ChatColors.background,
+          color: AppColors.background,
           child: Row(
             children: [
               if (isDesktop)

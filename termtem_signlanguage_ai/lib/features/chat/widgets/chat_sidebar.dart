@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/chat_session.dart';
-import '../theme/chat_colors.dart';
+import '../../../core/theme/app_colors.dart';
 import 'chat_session_tile.dart';
 import '../../../shared/widgets/circle_icon_button.dart';
 import '../data/mock_chat_data.dart';
@@ -55,7 +55,7 @@ class _ChatSidebarState extends State<ChatSidebar> {
 
     return Container(
       width: 290,
-      color: ChatColors.background,
+      color: AppColors.background,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +76,7 @@ class _ChatSidebarState extends State<ChatSidebar> {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
-                            color: ChatColors.textSoft,
+                            color: AppColors.textSoft,
                             letterSpacing: 0.8,
                           ),
                         ),
@@ -112,8 +112,8 @@ class _ChatSidebarState extends State<ChatSidebar> {
         children: [
           const CircleAvatar(
             radius: 18,
-            backgroundColor: ChatColors.primaryLight,
-            child: Icon(Icons.pets, color: ChatColors.primary, size: 18),
+            backgroundColor: AppColors.primaryLight,
+            child: Icon(Icons.pets, color: AppColors.primary, size: 18),
           ),
           const SizedBox(width: 10),
           const Text(
@@ -121,7 +121,7 @@ class _ChatSidebarState extends State<ChatSidebar> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: ChatColors.textDark,
+              color: AppColors.textDark,
               letterSpacing: -0.5,
             ),
           ),
@@ -150,10 +150,10 @@ class _ChatSidebarState extends State<ChatSidebar> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: ChatColors.surfaceVariant),
+          border: Border.all(color: AppColors.surfaceVariant),
           boxShadow: [
             BoxShadow(
-              color: ChatColors.primary.withOpacity(0.05),
+              color: AppColors.primary.withValues(alpha: 0.05),
               blurRadius: 14,
               offset: const Offset(0, 6),
             ),
@@ -161,7 +161,7 @@ class _ChatSidebarState extends State<ChatSidebar> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.search, size: 18, color: ChatColors.textSoft),
+            const Icon(Icons.search, size: 18, color: AppColors.textSoft),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
@@ -171,7 +171,7 @@ class _ChatSidebarState extends State<ChatSidebar> {
                 style: const TextStyle(fontSize: 14),
                 decoration: const InputDecoration(
                   hintText: 'Search chats...',
-                  hintStyle: TextStyle(color: ChatColors.textSoft, fontSize: 14),
+                  hintStyle: TextStyle(color: AppColors.textSoft, fontSize: 14),
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(vertical: 9),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/chat_colors.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/circle_icon_button.dart';
 
 class ChatInputBar extends StatelessWidget {
@@ -25,10 +25,10 @@ class ChatInputBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: const Border(top: BorderSide(color: ChatColors.surfaceVariant)),
+        border: const Border(top: BorderSide(color: AppColors.surfaceVariant)),
         boxShadow: [
           BoxShadow(
-            color: ChatColors.primary.withOpacity(0.06),
+            color: AppColors.primary.withValues(alpha: 0.06),
             blurRadius: 30,
             offset: const Offset(0, -8),
           ),
@@ -49,7 +49,7 @@ class ChatInputBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFF3F3F6),
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: ChatColors.surfaceVariant),
+                border: Border.all(color: AppColors.surfaceVariant),
               ),
               child: TextField(
                 controller: controller,

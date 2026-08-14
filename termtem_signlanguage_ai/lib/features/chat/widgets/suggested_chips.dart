@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/chat_colors.dart';
+import '../../../core/theme/app_colors.dart';
 
 class SuggestedChips extends StatelessWidget {
   final Function(String) onChipTap;
@@ -31,10 +31,10 @@ class SuggestedChips extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: ChatColors.primary.withOpacity(0.2)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: ChatColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -43,7 +43,7 @@ class SuggestedChips extends StatelessWidget {
         child: Text(
           text,
           style: const TextStyle(
-            color: ChatColors.primary,
+            color: AppColors.primary,
             fontWeight: FontWeight.w700,
             fontSize: 13,
           ),
