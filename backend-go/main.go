@@ -1,27 +1,41 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
-	"net/http"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "project-backend/docs"
+	"project-backend/routes"
 )
 
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	response := map[string]string{
-		"message": "Go backend is running",
-	}
-
-	json.NewEncoder(w).Encode(response)
-}
-
+// @title TermtemSL Backend API
+// @version 1.0
+// @description Backend API for TermtemSL Sign Language Application
+// @host localhost:8080
+// @BasePath /
 func main() {
-	http.HandleFunc("/api/health", healthCheck)
+	r := gin.Default()
+
+	// CORS middleware
+	r.Use(cors.Default())
+
+	// Health route
+	routes.RegisterHealthRoutes(r)
+
+	// Video routes (placeholder for next step)
+	routes.RegisterVideoRoutes(r)
+
+	// Swagger UI
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	log.Println("Server running on http://localhost:8080")
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
+	log.Println("Swagger UI: http://localhost:8080/swagger/index.html")
+
+	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
 	}
 }

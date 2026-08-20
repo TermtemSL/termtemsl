@@ -1,4 +1,4 @@
-package models
+package model
 
 type PredictionData struct {
 	Label      string  `json:"label"`

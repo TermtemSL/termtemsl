@@ -1,1 +1,11 @@
-backend.exe
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+server
+
+# Output directories
+uploads/
+outputs/

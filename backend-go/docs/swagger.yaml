@@ -1,0 +1,29 @@
+basePath: /
+definitions:
+  model.HealthResponse:
+    properties:
+      status:
+        example: ok
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Backend API for TermtemSL Sign Language Application
+  title: TermtemSL Backend API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Check whether the backend server is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.HealthResponse'
+      summary: Check API health
+      tags:
+      - Health
+swagger: "2.0"
