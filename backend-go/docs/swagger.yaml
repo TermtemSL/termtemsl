@@ -26,4 +26,39 @@ paths:
       summary: Check API health
       tags:
       - Health
+  /api/videos/upload:
+    post:
+      description: Accepts a multipart/form-data video upload and saves it to disk
+      consumes:
+      - multipart/form-data
+      produces:
+      - application/json
+      parameters:
+      - description: Video file to upload (mp4, mov, avi, mkv)
+        in: formData
+        name: video
+        required: true
+        type: file
+      responses:
+        "200":
+          description: video uploaded successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: bad request - no file or invalid type
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload a video file
+      tags:
+      - Videos
 swagger: "2.0"
