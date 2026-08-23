@@ -57,8 +57,8 @@ Deep Learning provides stronger capabilities for:
 - Flutter
 
 ## Backend
-- Python
-- GoLang
+- Go + Gin for REST APIs, business logic, Swagger, and PostgreSQL access
+- Python + FastAPI for MediaPipe and trained-model inference
 
 ## AI / Deep Learning
 - PyTorch
@@ -69,6 +69,7 @@ Deep Learning provides stronger capabilities for:
 ## Database / Infrastructure
 - Supabase
 - PostgreSQL
+- Docker
 
 ## Other Tools
 - Git & GitHub
@@ -95,13 +96,21 @@ Deep Learning provides stronger capabilities for:
 
 ## Backend Setup
 
-The backend is built with FastAPI. For full backend setup details, please refer to the [Backend README](./backend/README.md).
+The Go service is the main application and business API. It currently provides health checks,
+local video upload, Swagger documentation, and a Supabase PostgreSQL connection. For setup and
+testing instructions, see the [Go Backend README](./backend-go/README.md).
 
-To run the backend server quickly, you can use the following commands:
-```bash
-cd backend
-uvicorn app.main:app --reload
+To run the Go API locally, configure `DATABASE_URL` in the current shell and run:
+
+```powershell
+cd backend-go
+$env:DATABASE_URL = "your-real-supabase-connection-string"
+go run .
 ```
+
+The Python service under [`backend/`](./backend/) contains the MediaPipe and trained-model
+inference implementation. It is being retained as the AI service and will be integrated with Go
+in a later milestone; see the [Python Backend README](./backend/README.md) for its standalone setup.
 
 ## Frontend Setup
 

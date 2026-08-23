@@ -6,8 +6,10 @@ services:
     container_name: termtemsl-backend-go
     ports:
       - "8080:8080"
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "${DATABASE_URL}"
     volumes:
-      # Named volumes keep uploaded and generated files across container restarts.
       - backend_uploads:/app/uploads
       - backend_outputs:/app/outputs
     restart: unless-stopped
@@ -18,13 +20,6 @@ services:
       start_period: 10s
       retries: 3
 
-# ── Named volumes ──────────────────────────────────────────────────────────────
-# Persisted across container restarts during development.
-# To wipe them:  docker compose down -v
 volumes:
   backend_uploads:
   backend_outputs:
-
-# ── Notes ──────────────────────────────────────────────────────────────────────
-# Database, Redis, AI/model service, and Flutter are NOT included here.
-# They will be added as separate services in a future iteration.

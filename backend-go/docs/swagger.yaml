@@ -1,5 +1,14 @@
 basePath: /
 definitions:
+  model.DatabaseHealthResponse:
+    properties:
+      database:
+        example: connected
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
   model.HealthResponse:
     properties:
       status:
@@ -13,32 +22,19 @@ info:
   title: TermtemSL Backend API
   version: "1.0"
 paths:
-  /health:
-    get:
-      description: Check whether the backend server is running
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.HealthResponse'
-      summary: Check API health
-      tags:
-      - Health
   /api/videos/upload:
     post:
-      description: Accepts a multipart/form-data video upload and saves it to disk
       consumes:
       - multipart/form-data
-      produces:
-      - application/json
+      description: Accepts a multipart/form-data video upload and saves it to disk
       parameters:
       - description: Video file to upload (mp4, mov, avi, mkv)
         in: formData
         name: video
         required: true
         type: file
+      produces:
+      - application/json
       responses:
         "200":
           description: video uploaded successfully
@@ -61,4 +57,34 @@ paths:
       summary: Upload a video file
       tags:
       - Videos
+  /health:
+    get:
+      description: Check whether the backend server is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.HealthResponse'
+      summary: Check API health
+      tags:
+      - Health
+  /health/db:
+    get:
+      description: Check whether the backend can connect to PostgreSQL
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DatabaseHealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/model.DatabaseHealthResponse'
+      summary: Check database health
+      tags:
+      - Health
 swagger: "2.0"

@@ -9,3 +9,14 @@ preprocess_env/
 train_env/
 
 test_data/
+
+# Environment files
+.env
+.env.*
+!.env.example
+backend-go/.env
+backend/.env
+
+# Runtime-generated files
+backend-go/uploads/
+backend-go/outputs/

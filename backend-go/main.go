@@ -8,6 +8,8 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	"project-backend/config"
+	"project-backend/database"
 	_ "project-backend/docs"
 	"project-backend/routes"
 )
@@ -18,13 +20,27 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db, err := database.Open(cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("database initialization failed: %v", err)
+	}
+	defer db.Close()
+
+	log.Println("Database connection established")
+
 	r := gin.Default()
 
 	// CORS middleware
 	r.Use(cors.Default())
 
 	// Health route
-	routes.RegisterHealthRoutes(r)
+	routes.RegisterHealthRoutes(r, db)
 
 	// Video routes (placeholder for next step)
 	routes.RegisterVideoRoutes(r)
@@ -35,7 +51,7 @@ func main() {
 	log.Println("Server running on http://localhost:8080")
 	log.Println("Swagger UI: http://localhost:8080/swagger/index.html")
 
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatal(err)
 	}
 }
