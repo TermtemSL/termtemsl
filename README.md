@@ -57,11 +57,11 @@ Deep Learning provides stronger capabilities for:
 - Flutter
 
 ## Backend
-- Python
-- GoLang
+- Go + Gin for REST APIs, business logic, Swagger, and PostgreSQL access
+- Python + FastAPI for MediaPipe and trained-model inference
 
 ## AI / Deep Learning
-- PyTorch
+- TensorFlow / Keras (current LSTM inference model)
 - OpenCV
 - NumPy
 - Pandas
@@ -69,6 +69,7 @@ Deep Learning provides stronger capabilities for:
 ## Database / Infrastructure
 - Supabase
 - PostgreSQL
+- Docker
 
 ## Other Tools
 - Git & GitHub
@@ -95,13 +96,34 @@ Deep Learning provides stronger capabilities for:
 
 ## Backend Setup
 
-The backend is built with FastAPI. For full backend setup details, please refer to the [Backend README](./backend/README.md).
+The Go service is the main application and business API. It currently provides health checks,
+local video upload, Swagger documentation, a Supabase PostgreSQL connection, and local verification
+of Supabase Auth access tokens. For setup and testing instructions, see the
+[Go Backend README](./backend-go/README.md).
 
-To run the backend server quickly, you can use the following commands:
-```bash
-cd backend
-uvicorn app.main:app --reload
+To run the Go API locally, configure the database and public Supabase Auth metadata in the current shell and run:
+
+```powershell
+cd backend-go
+$env:DATABASE_URL = "your-real-supabase-connection-string"
+$env:SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"
+$env:SUPABASE_JWT_ISSUER = "https://YOUR_PROJECT_REF.supabase.co/auth/v1"
+$env:SUPABASE_JWT_AUDIENCE = "authenticated"
+go run .
 ```
+
+Supabase owns account registration, passwords, OAuth providers, and sessions. The Go backend does not implement Google OAuth directly; it verifies the Supabase bearer token regardless of whether the user signed in with email/password or an OAuth provider configured through Supabase.
+
+The Python service under [`backend/`](./backend/) contains the MediaPipe and trained-model
+inference implementation. Go forwards authenticated processing requests to this AI service;
+see the [Python Backend README](./backend/README.md) for its standalone setup.
+
+Run the Python AI service alone with `docker compose up -d --build ai-python` from the
+repository root. Open `http://localhost:8000/docs` to verify video processing. Docker
+provides Python 3.11, so a host Python installation is unnecessary.
+Flutter now signs in with Supabase and calls protected `POST /api/videos/process`
+on Go to forward videos to Python. See the [Flutter README](./termtem_signlanguage_ai/README.md)
+for local auth configuration, browser setup, and optional Google sign-in.
 
 ## Frontend Setup
 

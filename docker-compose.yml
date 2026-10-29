@@ -1,0 +1,53 @@
+services:
+  # Python AI service used by the Go processing endpoint.
+  ai-python:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      PREDICTION_MODE: "${AI_PREDICTION_MODE:-model}"
+      MODEL_PATH: /app/models/lstm_model.keras
+      MODEL_INFO_PATH: /app/models/model_info.json
+    volumes:
+      - ai_uploads:/app/backend/uploads
+      - ai_outputs:/app/backend/outputs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+
+  backend-go:
+    build:
+      context: ./backend-go
+      dockerfile: Dockerfile
+    container_name: termtemsl-backend-go
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      # Docker DNS reaches Python; local go run uses http://127.0.0.1:8000.
+      AI_SERVICE_URL: "http://ai-python:8000"
+      DATABASE_URL: "${DATABASE_URL}"
+      SUPABASE_URL: "${SUPABASE_URL}"
+      SUPABASE_JWT_ISSUER: "${SUPABASE_JWT_ISSUER}"
+      SUPABASE_JWT_AUDIENCE: "${SUPABASE_JWT_AUDIENCE}"
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_outputs:/app/outputs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  ai_uploads:
+  ai_outputs:
+  backend_uploads:
+  backend_outputs:

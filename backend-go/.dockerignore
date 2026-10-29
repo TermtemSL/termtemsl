@@ -1,0 +1,39 @@
+# ── Version control ────────────────────────────────────────────────────────────
+.git
+.gitignore
+.github
+
+# ── Environment & secrets ──────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── IDE / editor files ─────────────────────────────────────────────────────────
+.vscode
+.idea
+*.code-workspace
+
+# ── Local build output ─────────────────────────────────────────────────────────
+*.exe
+*.dll
+*.so
+*.dylib
+server
+/backend-go
+
+# ── Test cache ─────────────────────────────────────────────────────────────────
+*.test
+*.bench
+
+# ── Runtime data dirs (uploaded/generated files are not part of the image) ─────
+uploads/
+outputs/
+
+# ── OS artefacts ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Temporary files ────────────────────────────────────────────────────────────
+*.tmp
+*.log
+tmp/

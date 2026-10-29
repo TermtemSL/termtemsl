@@ -40,8 +40,11 @@ MODEL_DIR = os.path.join(BASE_DIR, "models")
 
 class ModelPredictionService(PredictionService):
     def __init__(self, model_path: str):
-        self.model_path = os.path.join(MODEL_DIR, "lstm_model.keras")
-        self.model_info_path = os.path.join(MODEL_DIR, "model_info.json")
+        # Honor container/local configuration; bundled paths are the fallback.
+        self.model_path = os.path.abspath(model_path)
+        self.model_info_path = os.path.abspath(os.getenv(
+            "MODEL_INFO_PATH", os.path.join(MODEL_DIR, "model_info.json")
+        ))
 
         # Debug prints to check if backend can find model files
         print("MODEL PATH:", self.model_path)
@@ -54,18 +57,16 @@ class ModelPredictionService(PredictionService):
 
     def _load_model(self):
         if not os.path.exists(self.model_path):
-            print(f"Model not found: {self.model_path}")
-            return None
+            raise FileNotFoundError(f"Model not found: {self.model_path}")
 
         print(f"Loading Keras model from {self.model_path}")
-        return keras.models.load_model(self.model_path)
+        return keras.models.load_model(self.model_path, compile=False)
 
     def _load_class_names(self):
         # model_info.json contains Thai label mapping.
         # Example: index 11 = "สวัสดี"
         if not os.path.exists(self.model_info_path):
-            print("model_info.json not found. Using fallback labels.")
-            return ["สวัสดี", "ขอบคุณ", "ใช่", "ไม่", "รัก"]
+            raise FileNotFoundError(f"Model metadata not found: {self.model_info_path}")
 
         with open(self.model_info_path, "r", encoding="utf-8") as f:
             info = json.load(f)
