@@ -16,10 +16,12 @@ class VideoService:
         
         mode = os.getenv("PREDICTION_MODE", "mock").lower()
         if mode == "model":
-            model_path = os.getenv("MODEL_PATH", "models/model.pth")
+            model_path = os.getenv("MODEL_PATH", "../models/lstm_model.keras")
             self.prediction_service = ModelPredictionService(model_path)
-        else:
+        elif mode == "mock":
             self.prediction_service = MockPredictionService()
+        else:
+            raise ValueError("PREDICTION_MODE must be model or mock")
 
     def process_video(self, upload_file: UploadFile) -> VideoUploadData:
         video_id = generate_video_id()
@@ -30,6 +32,11 @@ class VideoService:
         try:
             # 2. Extract landmarks using MediaPipe
             frame_count, landmarks_detected, coordinates_file = self.mediapipe_service.extract_landmarks(filepath, video_id)
+            # Avoid returning a random/model label for unreadable or empty input.
+            if frame_count == 0:
+                raise ValueError("Video contains no readable frames")
+            if not landmarks_detected:
+                raise ValueError("No pose or hand landmarks detected in video")
             
             # 3. Get prediction
             # We pass coordinates_file to the prediction service

@@ -1,0 +1,12 @@
+# Only send Python source and model artifacts to the root-context AI build.
+**
+!backend/
+!backend/Dockerfile
+!backend/requirements.txt
+!backend/app/
+!backend/app/**
+!models/
+!models/lstm_model.keras
+!models/model_info.json
+**/__pycache__/
+**/*.pyc

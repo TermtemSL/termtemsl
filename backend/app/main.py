@@ -20,6 +20,11 @@ app.add_middleware(
 # Include routes (For testing /api/video/upload)
 app.include_router(video_routes.router, prefix="/api/video", tags=["video"])
 
+# Separate liveness check for Docker; model mode loads its model at startup.
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to TermtemSL API Backend"}

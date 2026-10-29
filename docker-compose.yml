@@ -1,4 +1,25 @@
 services:
+  # Standalone AI verification; Go integration is a later milestone.
+  ai-python:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      PREDICTION_MODE: "${AI_PREDICTION_MODE:-model}"
+      MODEL_PATH: /app/models/lstm_model.keras
+      MODEL_INFO_PATH: /app/models/model_info.json
+    volumes:
+      - ai_uploads:/app/backend/uploads
+      - ai_outputs:/app/backend/outputs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+
   backend-go:
     build:
       context: ./backend-go
@@ -24,5 +45,7 @@ services:
       retries: 3
 
 volumes:
+  ai_uploads:
+  ai_outputs:
   backend_uploads:
   backend_outputs:

@@ -61,7 +61,7 @@ Deep Learning provides stronger capabilities for:
 - Python + FastAPI for MediaPipe and trained-model inference
 
 ## AI / Deep Learning
-- PyTorch
+- TensorFlow / Keras (current LSTM inference model)
 - OpenCV
 - NumPy
 - Pandas
@@ -117,6 +117,11 @@ Supabase owns account registration, passwords, OAuth providers, and sessions. Th
 The Python service under [`backend/`](./backend/) contains the MediaPipe and trained-model
 inference implementation. It is being retained as the AI service and will be integrated with Go
 in a later milestone; see the [Python Backend README](./backend/README.md) for its standalone setup.
+
+Run the Python AI service alone with `docker compose up -d --build ai-python` from the
+repository root. Open `http://localhost:8000/docs` to verify video processing. Docker
+provides Python 3.11, so a host Python installation is unnecessary. This does not
+connect Go or Flutter to the AI service yet.
 
 ## Frontend Setup
 
