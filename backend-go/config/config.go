@@ -13,6 +13,7 @@ type Config struct {
 	SupabaseURL         string
 	SupabaseJWTIssuer   string
 	SupabaseJWTAudience string
+	AIServiceURL        string
 }
 
 func Load() (Config, error) {
@@ -22,6 +23,7 @@ func Load() (Config, error) {
 		SupabaseURL:         os.Getenv("SUPABASE_URL"),
 		SupabaseJWTIssuer:   os.Getenv("SUPABASE_JWT_ISSUER"),
 		SupabaseJWTAudience: os.Getenv("SUPABASE_JWT_AUDIENCE"),
+		AIServiceURL:        strings.TrimRight(getEnv("AI_SERVICE_URL", "http://127.0.0.1:8000"), "/"),
 	}
 
 	switch {
@@ -43,6 +45,12 @@ func Load() (Config, error) {
 	}
 	if expected := cfg.SupabaseURL + "/auth/v1"; cfg.SupabaseJWTIssuer != expected {
 		return Config{}, fmt.Errorf("SUPABASE_JWT_ISSUER must equal %s", expected)
+	}
+
+	// Local development uses loopback; Compose uses the ai-python service name.
+	aiURL, err := url.Parse(cfg.AIServiceURL)
+	if err != nil || (aiURL.Scheme != "http" && aiURL.Scheme != "https") || aiURL.Host == "" || aiURL.User != nil || aiURL.RawQuery != "" || aiURL.Fragment != "" || aiURL.Path != "" {
+		return Config{}, fmt.Errorf("AI_SERVICE_URL must be an HTTP(S) origin without credentials, path, query, or fragment")
 	}
 
 	return cfg, nil

@@ -1,5 +1,5 @@
 services:
-  # Standalone AI verification; Go integration is a later milestone.
+  # Python AI service used by the Go processing endpoint.
   ai-python:
     build:
       context: .
@@ -29,6 +29,8 @@ services:
       - "8080:8080"
     environment:
       PORT: "8080"
+      # Docker DNS reaches Python; local go run uses http://127.0.0.1:8000.
+      AI_SERVICE_URL: "http://ai-python:8000"
       DATABASE_URL: "${DATABASE_URL}"
       SUPABASE_URL: "${SUPABASE_URL}"
       SUPABASE_JWT_ISSUER: "${SUPABASE_JWT_ISSUER}"

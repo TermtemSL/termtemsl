@@ -15,6 +15,9 @@ func TestSwaggerBearerSecurity(t *testing.T) {
 			In   string `json:"in"`
 		} `json:"securityDefinitions"`
 		Paths map[string]struct {
+			Post struct {
+				Security []map[string][]string `json:"security"`
+			} `json:"post"`
 			Get struct {
 				Security []map[string][]string `json:"security"`
 			} `json:"get"`
@@ -43,5 +46,15 @@ func TestSwaggerBearerSecurity(t *testing.T) {
 
 	if healthSecurity := spec.Paths["/health"].Get.Security; len(healthSecurity) != 0 {
 		t.Fatalf("/health unexpectedly requires authentication: %#v", healthSecurity)
+	}
+	processing := spec.Paths["/api/videos/process"].Post.Security
+	if len(processing) != 1 {
+		t.Fatal("video processing must declare BearerAuth")
+	}
+	if _, ok := processing[0]["BearerAuth"]; !ok {
+		t.Fatal("processing missing BearerAuth")
+	}
+	if len(spec.Paths["/api/videos/upload"].Post.Security) != 0 {
+		t.Fatal("legacy upload must remain public")
 	}
 }

@@ -16,6 +16,7 @@ import (
 	_ "project-backend/docs"
 	"project-backend/middleware"
 	"project-backend/routes"
+	"project-backend/services"
 )
 
 // @title TermtemSL Backend API
@@ -78,6 +79,8 @@ func main() {
 	protectedAPI := r.Group("/api")
 	protectedAPI.Use(middleware.RequireAuth(authVerifier))
 	routes.RegisterAuthRoutes(protectedAPI)
+	// Python handles AI only; this protected Go route is the application entry point.
+	routes.RegisterProcessingRoutes(protectedAPI, services.NewAIClient(cfg.AIServiceURL))
 
 	log.Println("Server running on http://localhost:8080")
 	log.Println("Swagger UI: http://localhost:8080/swagger/index.html")

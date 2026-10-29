@@ -22,6 +22,39 @@ definitions:
         format: uuid
         type: string
     type: object
+  model.PredictionData:
+    properties:
+      confidence:
+        type: number
+      label:
+        type: string
+      mode:
+        type: string
+    type: object
+  model.VideoUploadData:
+    properties:
+      coordinates_file:
+        type: string
+      filename:
+        type: string
+      frame_count:
+        type: integer
+      landmarks_detected:
+        type: boolean
+      prediction:
+        $ref: '#/definitions/model.PredictionData'
+      video_id:
+        type: string
+    type: object
+  model.VideoUploadResponse:
+    properties:
+      data:
+        $ref: '#/definitions/model.VideoUploadData'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -50,6 +83,67 @@ paths:
       summary: Return the authenticated user
       tags:
       - Authentication
+  /api/videos/process:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Sends a video to Python for MediaPipe extraction and existing model
+        inference. Mock mode is identified explicitly. Does not change the trained
+        model.
+      parameters:
+      - description: Short sign-language video (mp4, mov, avi, mkv), maximum 32 MiB
+        in: formData
+        name: video
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.VideoUploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "413":
+          description: Request Entity Too Large
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "502":
+          description: Bad Gateway
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "504":
+          description: Gateway Timeout
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Process a sign-language video
+      tags:
+      - Videos
   /api/videos/upload:
     post:
       consumes:

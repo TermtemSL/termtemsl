@@ -8,8 +8,50 @@ Current milestones:
 - Milestone 2: local video upload through `POST /api/videos/upload`
 - Milestone 3: Supabase PostgreSQL connection and `GET /health/db`
 - Milestone 4: Supabase Auth JWT verification and protected `GET /api/me`
+- Milestone 6: protected `POST /api/videos/process` forwards a video to Python AI
 
-The Python AI service is present elsewhere in the repository but is not connected to the Go API yet. Supabase Storage, application tables, profiles, and realtime inference belong to later milestones.
+The Python AI service runs separately and Go forwards processing requests to it.
+Supabase Storage, application tables, profiles, and realtime inference belong to later milestones.
+
+## Process video through Go (milestone 6)
+
+Start Python from the repository root:
+
+```sh
+docker compose up -d --build ai-python
+```
+
+For local Go, `AI_SERVICE_URL` defaults to `http://127.0.0.1:8000`. Restart
+`go run .` after updating the code. Keep your existing Supabase configuration.
+For an all-container setup, use `docker compose up -d --build ai-python backend-go`;
+Compose supplies `http://ai-python:8000` to Go. Stop any host Go server first to
+free port 8080. Python need not be ready for Go to start; unavailable AI returns 502.
+
+In Go Swagger (`http://localhost:8080/swagger/index.html`), authorize with
+`Bearer YOUR_SUPABASE_ACCESS_TOKEN`. Execute `POST /api/videos/process` using the
+`video` field and a short clip (up to 32 MiB). Go maps this to Python's `file`
+field and returns the existing `success`, `data`, `message` response, including
+the prediction label, confidence, and explicit `model` or `mock` mode.
+
+The request has a 120-second AI timeout. Missing/invalid authentication returns
+401 before Python is called; bad multipart/type returns 400; oversized uploads
+return 413; Python processing failures return 422; unavailable or malformed AI
+responses return 502; timeouts return 504. Python's internal errors are not exposed.
+Use short clips: a timeout does not guarantee Python has stopped its ongoing work.
+
+The Supabase token stays in Go. No user profile, database rows, or storage records
+are created. Python saves videos/landmarks in its existing volumes. The returned
+`coordinates_file` is a Python-internal path, not a public download URL. Go's
+legacy `POST /api/videos/upload` stays public and only saves a file locally.
+The existing model, weights, labels, and preprocessing are unchanged by milestone 6.
+
+Automated Go tests use a local fake Python server to verify authentication gating,
+multipart mapping, response validation, upload limits, and error handling. An
+optional live test uses real Python with a local authentication fixture (it does
+not sign in to Supabase): from `backend-go`, set `TERMTEM_AI_TEST_URL` to
+`http://127.0.0.1:8000` and `TERMTEM_AI_TEST_VIDEO` to an absolute short-video path,
+then run `go test ./routes -run TestProcessingWithLivePython -v`.
+Verify a real Supabase Bearer token through Swagger separately.
 
 ## Project structure
 
@@ -59,6 +101,7 @@ The local `uploads/` and `outputs/` directories are runtime data. Docker Compose
 | GET | `/health` | Go API liveness check |
 | GET | `/health/db` | PostgreSQL connectivity check |
 | POST | `/api/videos/upload` | Save a multipart video to local storage |
+| POST | `/api/videos/process` | Process video through Python (Bearer token required) |
 | GET | `/api/me` | Return the verified Supabase user UUID (Bearer token required) |
 | GET | `/swagger/index.html` | Interactive Swagger UI |
 
@@ -294,6 +337,7 @@ Go/Gin API :8080
     |-- GET  /health
     |-- GET  /health/db ----------> Supabase PostgreSQL
     |-- POST /api/videos/upload --> local uploads directory
+    |-- POST /api/videos/process --> Python :8000 --> MediaPipe + model
     |-- GET  /api/me
     |       |-- Bearer middleware
     |       `-- cached ES256 JWKS --> Supabase Auth public keys

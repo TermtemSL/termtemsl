@@ -57,8 +57,8 @@ for the next positive video test. Windows/AMD64 has not yet been tested.
 docker compose stop ai-python
 ```
 
-Go-to-Python forwarding and live-camera streaming are not implemented in this
-milestone. Flutter still calls the original Python endpoint directly. Camera
+Go now forwards authenticated `POST /api/videos/process` requests to this service.
+Live-camera streaming is not implemented. Flutter still calls the original Python endpoint directly. Camera
 capture belongs on the client; the container processes uploaded video/frames.
 
 ## Setup Instructions

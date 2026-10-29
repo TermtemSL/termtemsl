@@ -50,6 +50,97 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/videos/process": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a video to Python for MediaPipe extraction and existing model inference. Mock mode is identified explicitly. Does not change the trained model.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Videos"
+                ],
+                "summary": "Process a sign-language video",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Short sign-language video (mp4, mov, avi, mkv), maximum 32 MiB",
+                        "name": "video",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.VideoUploadResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "Gateway Timeout",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/videos/upload": {
             "post": {
                 "description": "Accepts a multipart/form-data video upload and saves it to disk",
@@ -180,6 +271,57 @@ const docTemplate = `{
                     "type": "string",
                     "format": "uuid",
                     "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "model.PredictionData": {
+            "type": "object",
+            "properties": {
+                "confidence": {
+                    "type": "number"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "mode": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.VideoUploadData": {
+            "type": "object",
+            "properties": {
+                "coordinates_file": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "frame_count": {
+                    "type": "integer"
+                },
+                "landmarks_detected": {
+                    "type": "boolean"
+                },
+                "prediction": {
+                    "$ref": "#/definitions/model.PredictionData"
+                },
+                "video_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.VideoUploadResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/model.VideoUploadData"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         }

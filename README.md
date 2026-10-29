@@ -115,13 +115,14 @@ go run .
 Supabase owns account registration, passwords, OAuth providers, and sessions. The Go backend does not implement Google OAuth directly; it verifies the Supabase bearer token regardless of whether the user signed in with email/password or an OAuth provider configured through Supabase.
 
 The Python service under [`backend/`](./backend/) contains the MediaPipe and trained-model
-inference implementation. It is being retained as the AI service and will be integrated with Go
-in a later milestone; see the [Python Backend README](./backend/README.md) for its standalone setup.
+inference implementation. Go forwards authenticated processing requests to this AI service;
+see the [Python Backend README](./backend/README.md) for its standalone setup.
 
 Run the Python AI service alone with `docker compose up -d --build ai-python` from the
 repository root. Open `http://localhost:8000/docs` to verify video processing. Docker
 provides Python 3.11, so a host Python installation is unnecessary. This does not
-connect Go or Flutter to the AI service yet.
+connect Flutter to Go yet. Go now provides protected `POST /api/videos/process`
+to forward videos to Python; see the Go README for authentication and error responses.
 
 ## Frontend Setup
 
