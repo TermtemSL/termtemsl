@@ -15,6 +15,13 @@ definitions:
         example: ok
         type: string
     type: object
+  model.MeResponse:
+    properties:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        format: uuid
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -22,6 +29,27 @@ info:
   title: TermtemSL Backend API
   version: "1.0"
 paths:
+  /api/me:
+    get:
+      description: Returns the UUID from the verified Supabase access token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MeResponse'
+        "401":
+          description: missing or invalid bearer token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Return the authenticated user
+      tags:
+      - Authentication
   /api/videos/upload:
     post:
       consumes:
@@ -87,4 +115,10 @@ paths:
       summary: Check database health
       tags:
       - Health
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter a Supabase access token as: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

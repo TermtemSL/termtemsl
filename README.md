@@ -97,16 +97,22 @@ Deep Learning provides stronger capabilities for:
 ## Backend Setup
 
 The Go service is the main application and business API. It currently provides health checks,
-local video upload, Swagger documentation, and a Supabase PostgreSQL connection. For setup and
-testing instructions, see the [Go Backend README](./backend-go/README.md).
+local video upload, Swagger documentation, a Supabase PostgreSQL connection, and local verification
+of Supabase Auth access tokens. For setup and testing instructions, see the
+[Go Backend README](./backend-go/README.md).
 
-To run the Go API locally, configure `DATABASE_URL` in the current shell and run:
+To run the Go API locally, configure the database and public Supabase Auth metadata in the current shell and run:
 
 ```powershell
 cd backend-go
 $env:DATABASE_URL = "your-real-supabase-connection-string"
+$env:SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"
+$env:SUPABASE_JWT_ISSUER = "https://YOUR_PROJECT_REF.supabase.co/auth/v1"
+$env:SUPABASE_JWT_AUDIENCE = "authenticated"
 go run .
 ```
+
+Supabase owns account registration, passwords, OAuth providers, and sessions. The Go backend does not implement Google OAuth directly; it verifies the Supabase bearer token regardless of whether the user signed in with email/password or an OAuth provider configured through Supabase.
 
 The Python service under [`backend/`](./backend/) contains the MediaPipe and trained-model
 inference implementation. It is being retained as the AI service and will be integrated with Go

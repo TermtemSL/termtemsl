@@ -9,6 +9,9 @@ services:
     environment:
       PORT: "8080"
       DATABASE_URL: "${DATABASE_URL}"
+      SUPABASE_URL: "${SUPABASE_URL}"
+      SUPABASE_JWT_ISSUER: "${SUPABASE_JWT_ISSUER}"
+      SUPABASE_JWT_AUDIENCE: "${SUPABASE_JWT_AUDIENCE}"
     volumes:
       - backend_uploads:/app/uploads
       - backend_outputs:/app/outputs
