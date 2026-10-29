@@ -58,7 +58,7 @@ docker compose stop ai-python
 ```
 
 Go now forwards authenticated `POST /api/videos/process` requests to this service.
-Live-camera streaming is not implemented. Flutter still calls the original Python endpoint directly. Camera
+Live-camera streaming is not implemented. Flutter sends authenticated processing requests through Go. Camera
 capture belongs on the client; the container processes uploaded video/frames.
 
 ## Setup Instructions

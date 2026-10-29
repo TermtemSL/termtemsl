@@ -1,161 +1,211 @@
 import 'package:flutter/material.dart';
-import 'register_screen.dart';
-import 'main_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/config/app_config.dart';
+import '../services/auth_scope.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key, this.register = false});
+  final bool register;
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _form = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
+  bool _register = false;
+  bool _busy = false;
+  String? _message;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Nong Termtem',
-                style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900, letterSpacing: -2, color: Colors.black),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Enter your details to access your friendly friend.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-              const SizedBox(height: 48),
-              
-              // Email Field
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+  void initState() {
+    super.initState();
+    _register = widget.register;
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _password.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit({bool google = false}) async {
+    if (!google && !_form.currentState!.validate()) return;
+    final auth = AuthScope.of(context);
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    try {
+      if (google) {
+        await auth.signInWithGoogle();
+      } else if (_register) {
+        final signedIn = await auth.signUp(
+          _name.text,
+          _email.text,
+          _password.text,
+        );
+        if (!signedIn && mounted) {
+          setState(() {
+            _register = false;
+            _password.clear();
+            _confirm.clear();
+            _message =
+                'Check your email to confirm your account, then sign in.';
+          });
+        }
+      } else {
+        await auth.signIn(_email.text, _password.text);
+      }
+    } on AuthException catch (error) {
+      if (mounted) setState(() => _message = error.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _message = 'Could not connect. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(30),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Form(
+              key: _form,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('EMAIL ADDRESS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                  const Icon(Icons.sign_language, size: 56, color: Colors.teal),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Nong Termtem',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900),
+                  ),
                   const SizedBox(height: 8),
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: 'name@example.com',
-                      suffixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
-                      filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  Text(
+                    _register
+                        ? 'Create your account'
+                        : 'Sign in to translate and practise signs',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  if (_register) ...[
+                    TextFormField(
+                      controller: _name,
+                      enabled: !_busy,
+                      decoration: const InputDecoration(labelText: 'Full name'),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? 'Enter your name'
+                          : null,
                     ),
+                    const SizedBox(height: 16),
+                  ],
+                  TextFormField(
+                    controller: _email,
+                    enabled: !_busy,
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    validator: (v) =>
+                        v == null ||
+                            !RegExp(
+                              r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                            ).hasMatch(v.trim())
+                        ? 'Enter a valid email'
+                        : null,
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Password Field
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('PASSWORD', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text('FORGOT?', style: TextStyle(fontSize: 12, color: Colors.black, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  TextField(
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _password,
+                    enabled: !_busy,
                     obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: '••••••••',
-                      suffixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
-                      filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 40),
-
-              // Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const MainScreen()),
-                    );
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text('LOGIN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1)),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward, size: 18),
+                    autofillHints: [
+                      _register
+                          ? AutofillHints.newPassword
+                          : AutofillHints.password,
                     ],
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    onFieldSubmitted: (_) {
+                      if (!_busy) _submit();
+                    },
+                    validator: (v) => v == null || v.isEmpty
+                        ? 'Enter your password'
+                        : _register && v.length < 8
+                        ? 'Use at least 8 characters'
+                        : null,
                   ),
-                ),
-              ),
-              
-              const SizedBox(height: 40),
-              Row(
-                children: const [
-                  Expanded(child: Divider(color: Color(0xFFEEEEEE))),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('OR CONTINUE WITH', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                  if (_register) ...[
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _confirm,
+                      enabled: !_busy,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Confirm password',
+                      ),
+                      validator: (v) =>
+                          v != _password.text ? 'Passwords do not match' : null,
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  if (_message != null) ...[
+                    Text(
+                      _message!,
+                      key: const Key('auth-message'),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  FilledButton(
+                    onPressed: _busy ? null : () => _submit(),
+                    child: Text(
+                      _busy
+                          ? 'Please wait…'
+                          : _register
+                          ? 'Create account'
+                          : 'Sign in',
+                    ),
                   ),
-                  Expanded(child: Divider(color: Color(0xFFEEEEEE))),
+                  if (AppConfig.googleEnabled)
+                    OutlinedButton.icon(
+                      onPressed: _busy ? null : () => _submit(google: true),
+                      icon: const Icon(Icons.login),
+                      label: const Text('Continue with Google'),
+                    ),
+                  TextButton(
+                    onPressed: _busy
+                        ? null
+                        : () => setState(() {
+                            _register = !_register;
+                            _message = null;
+                            _form.currentState!.reset();
+                          }),
+                    child: Text(
+                      _register
+                          ? 'Already have an account? Sign in'
+                          : 'Create an account',
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 40),
-
-              // Centered Google Login
-              Center(
-                child: InkWell(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset('assets/images/google_logo.png', width: 20),
-                        const SizedBox(width: 12),
-                        const Text('GOOGLE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 1)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              const Spacer(),
-              const Text('New to the mentor program?', style: TextStyle(color: Colors.grey)),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                  );
-                },
-                child: const Text('CREATE ACCOUNT', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, letterSpacing: 1)),
-              ),
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }

@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../screens/profile_screen.dart';
+import '../../services/auth_scope.dart';
 
 /// The global app header shown at the top of every main screen.
 ///
@@ -8,8 +9,6 @@ import '../../screens/profile_screen.dart';
 /// The [onProfileTap] callback lets each screen handle profile navigation;
 /// if omitted the header pushes a default [ProfileScreen].
 ///
-/// Previously located at `lib/widgets/termtem_header.dart` (which now
-/// re-exports from here for backwards compatibility).
 class TermtemHeader extends StatelessWidget {
   final VoidCallback? onProfileTap;
 
@@ -30,7 +29,7 @@ class TermtemHeader extends StatelessWidget {
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -63,9 +62,9 @@ class TermtemHeader extends StatelessWidget {
                     () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const ProfileScreen(
-                            userName: 'Alex Johnson',
-                            userEmail: 'alex@example.com',
+                          builder: (_) => ProfileScreen(
+                            userName: AuthScope.of(context).user?.userMetadata?['full_name'] as String? ?? 'Member',
+                            userEmail: AuthScope.of(context).user?.email ?? '',
                           ),
                         ),
                       );

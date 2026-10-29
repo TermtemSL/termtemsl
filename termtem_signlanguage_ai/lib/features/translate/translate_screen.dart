@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'utils/video_preview.dart';
+import '../../services/auth_scope.dart';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart' as fp;
@@ -37,6 +38,8 @@ class _TranslateScreenState extends State<TranslateScreen> {
   double confidence = 0.0;
   String mode = '-';
   bool isLoading = false;
+  bool isPicking = false;
+  ApiService? _api;
 
   fp.PlatformFile? selectedVideo;
   VideoPlayerController? videoController;
@@ -45,6 +48,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
 
   @override
   void dispose() {
+    _api?.close();
     videoController?.dispose();
     super.dispose();
   }
@@ -52,33 +56,54 @@ class _TranslateScreenState extends State<TranslateScreen> {
   // ── Actions ────────────────────────────────────────────────────────────────
 
   Future<void> pickVideoForReview() async {
-    final file = await ApiService.pickVideo();
-    if (file == null) return;
-
-    await videoController?.dispose();
-
-    VideoPlayerController? controller;
-    if (file.path != null) {
-      controller = VideoPlayerController.file(File(file.path!));
-      await controller.initialize();
-      await controller.setLooping(true);
+    if (isPicking || isLoading) return;
+    setState(() => isPicking = true);
+    try {
+      final file = await ApiService.pickVideo();
+      if (file == null || !mounted) return;
+      if (file.size > 32 * 1024 * 1024) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Video exceeds 32 MiB. Choose a shorter clip.'),
+          ),
+        );
+        return;
+      }
+      final controller = await createVideoPreview(file);
+      if (!mounted) {
+        await controller?.dispose();
+        return;
+      }
+      final previous = videoController;
+      setState(() {
+        selectedVideo = file;
+        videoController = controller;
+        predictionText = 'Video selected. Ready to translate.';
+        confidence = 0;
+        mode = '-';
+      });
+      await previous?.dispose();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open the selected video.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isPicking = false);
     }
-
-    setState(() {
-      selectedVideo = file;
-      videoController = controller;
-      predictionText = 'Video selected. Ready to translate.';
-      confidence = 0.0;
-      mode = '-';
-    });
   }
 
   Future<void> uploadAndTranslate() async {
+    if (isLoading || isPicking) return;
     if (selectedVideo == null) {
       await pickVideoForReview();
       if (selectedVideo == null) return;
     }
 
+    if (!mounted) return;
+    final auth = AuthScope.of(context);
+    _api ??= ApiService(tokenProvider: auth.accessToken);
     setState(() {
       isLoading = true;
       predictionText = 'Processing video...';
@@ -87,7 +112,8 @@ class _TranslateScreenState extends State<TranslateScreen> {
     });
 
     try {
-      final response = await ApiService.uploadSelectedVideo(selectedVideo!);
+      final response = await _api!.uploadSelectedVideo(selectedVideo!);
+      if (!mounted) return;
       final prediction = response['data']['prediction'];
 
       setState(() {
@@ -96,21 +122,26 @@ class _TranslateScreenState extends State<TranslateScreen> {
         mode = prediction['mode'] ?? '-';
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        predictionText = 'Upload failed';
+        predictionText = e is ApiException
+            ? e.message
+            : 'Could not process video. Please sign in again or retry.';
         confidence = 0.0;
         mode = 'error';
       });
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> clearSelectedVideo() async {
-    await videoController?.dispose();
-
+    if (isLoading || isPicking) return;
+    final previous = videoController;
     setState(() {
       selectedVideo = null;
       videoController = null;
@@ -118,6 +149,7 @@ class _TranslateScreenState extends State<TranslateScreen> {
       confidence = 0.0;
       mode = '-';
     });
+    await previous?.dispose();
   }
 
   void _togglePlayback() {
@@ -167,9 +199,9 @@ class _TranslateScreenState extends State<TranslateScreen> {
                     selectedVideo: selectedVideo,
                     videoController: videoController,
                     mode: mode,
-                    isLoading: isLoading,
+                    isLoading: isLoading || isPicking,
                     onPickVideo: pickVideoForReview,
-                    onTranslate: isLoading || selectedVideo == null
+                    onTranslate: isLoading || isPicking || selectedVideo == null
                         ? null
                         : uploadAndTranslate,
                     onClear: clearSelectedVideo,

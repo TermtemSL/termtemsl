@@ -9,8 +9,6 @@ import 'widgets/video_pane.dart';
 ///   2. **Practice** — displays a camera pane (user) + reference pane side
 ///      by side, with a "Done" button.
 ///
-/// Previously located at `lib/screens/practice_modal.dart` (which now
-/// re-exports from here for backwards compatibility).
 class PracticeModal extends StatefulWidget {
   final String word;
   final String category;

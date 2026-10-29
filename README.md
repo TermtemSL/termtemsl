@@ -120,9 +120,10 @@ see the [Python Backend README](./backend/README.md) for its standalone setup.
 
 Run the Python AI service alone with `docker compose up -d --build ai-python` from the
 repository root. Open `http://localhost:8000/docs` to verify video processing. Docker
-provides Python 3.11, so a host Python installation is unnecessary. This does not
-connect Flutter to Go yet. Go now provides protected `POST /api/videos/process`
-to forward videos to Python; see the Go README for authentication and error responses.
+provides Python 3.11, so a host Python installation is unnecessary.
+Flutter now signs in with Supabase and calls protected `POST /api/videos/process`
+on Go to forward videos to Python. See the [Flutter README](./termtem_signlanguage_ai/README.md)
+for local auth configuration, browser setup, and optional Google sign-in.
 
 ## Frontend Setup
 

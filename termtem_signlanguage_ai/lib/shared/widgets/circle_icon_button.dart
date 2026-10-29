@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 /// A compact circular icon button with press-state animation.
@@ -55,7 +55,7 @@ class _CircleIconButtonState extends State<CircleIconButton> {
           boxShadow: widget.filled
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.18),
+                    color: AppColors.primary.withValues(alpha: 0.18),
                     blurRadius: 12,
                     offset: const Offset(0, 5),
                   ),

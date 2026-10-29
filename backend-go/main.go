@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -66,7 +65,7 @@ func main() {
 	r := gin.Default()
 
 	// CORS middleware
-	r.Use(cors.Default())
+	r.Use(middleware.BrowserCORS())
 
 	// Public routes: health, the legacy upload endpoint, and Swagger remain
 	// accessible without an access token during this milestone.

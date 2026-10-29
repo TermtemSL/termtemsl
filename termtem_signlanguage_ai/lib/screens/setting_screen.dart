@@ -107,7 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text(label,
             style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
         value: value,
-        activeColor: Colors.black,
+        activeThumbColor: Colors.black,
         onChanged: onChanged,
       ),
     );
