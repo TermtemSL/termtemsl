@@ -1,5 +1,16 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../../shared/widgets/hover_button.dart';
+import 'widgets/video_pane.dart';
 
+/// A full-screen dialog for practising a single sign-language word.
+///
+/// Shows two stages:
+///   1. **Ask** — prompts the learner to try the sign.
+///   2. **Practice** — displays a camera pane (user) + reference pane side
+///      by side, with a "Done" button.
+///
+/// Previously located at `lib/screens/practice_modal.dart` (which now
+/// re-exports from here for backwards compatibility).
 class PracticeModal extends StatefulWidget {
   final String word;
   final String category;
@@ -35,7 +46,7 @@ class _PracticeModalState extends State<PracticeModal> {
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 40,
               offset: const Offset(0, 12),
             )
@@ -56,7 +67,7 @@ class _PracticeModalState extends State<PracticeModal> {
           // Close button
           Align(
             alignment: Alignment.topLeft,
-            child: _HoverCloseButton(onTap: () => Navigator.of(context).pop()),
+            child: HoverCloseButton(onTap: () => Navigator.of(context).pop()),
           ),
           const SizedBox(height: 24),
 
@@ -100,7 +111,7 @@ class _PracticeModalState extends State<PracticeModal> {
           Row(
             children: [
               Expanded(
-                child: _HoverButton(
+                child: HoverButton(
                   label: 'Maybe later',
                   filled: false,
                   onTap: () => Navigator.of(context).pop(),
@@ -108,7 +119,7 @@ class _PracticeModalState extends State<PracticeModal> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _HoverButton(
+                child: HoverButton(
                   label: "Let's go! 🤙",
                   filled: true,
                   onTap: () => setState(() => _stage = 'practice'),
@@ -130,7 +141,7 @@ class _PracticeModalState extends State<PracticeModal> {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
           child: Row(
             children: [
-              _HoverCloseButton(onTap: () => Navigator.of(context).pop()),
+              HoverCloseButton(onTap: () => Navigator.of(context).pop()),
               const SizedBox(width: 12),
               Text(
                 widget.word,
@@ -161,14 +172,14 @@ class _PracticeModalState extends State<PracticeModal> {
 
         const SizedBox(height: 16),
 
-        // Camera + Video panes
+        // Camera + Reference panes
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
                 Expanded(
-                  child: _VideoPane(
+                  child: VideoPane(
                     label: 'YOU',
                     labelColor: Colors.blue,
                     icon: Icons.videocam,
@@ -179,7 +190,7 @@ class _PracticeModalState extends State<PracticeModal> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _VideoPane(
+                  child: VideoPane(
                     label: 'REFERENCE',
                     labelColor: Colors.green,
                     icon: Icons.sign_language,
@@ -232,8 +243,8 @@ class _PracticeModalState extends State<PracticeModal> {
                 const SizedBox(height: 12),
               ],
 
-              // Mark as done / Done practicing button
-              _HoverButton(
+              // Done button
+              HoverButton(
                 label: widget.isChallengeMode
                     ? '✅  Mark as done'
                     : '✅  Done practicing',
@@ -248,202 +259,6 @@ class _PracticeModalState extends State<PracticeModal> {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Video pane ─────────────────────────────────────────────────────────────────
-class _VideoPane extends StatelessWidget {
-  final String label;
-  final Color labelColor;
-  final IconData icon;
-  final Color bgColor;
-  final String sublabel;
-  final bool isCamera;
-
-  const _VideoPane({
-    required this.label,
-    required this.labelColor,
-    required this.icon,
-    required this.bgColor,
-    required this.sublabel,
-    required this.isCamera,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Stack(
-        children: [
-          Container(
-            color: bgColor,
-            child: Center(child: Icon(icon, size: 52, color: Colors.white24)),
-          ),
-          Positioned(
-            top: 10,
-            left: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                        color: labelColor, shape: BoxShape.circle)),
-                const SizedBox(width: 5),
-                Text(label,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold)),
-              ]),
-            ),
-          ),
-          Positioned(
-            bottom: 10,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                    color: Colors.black45,
-                    borderRadius: BorderRadius.circular(8)),
-                child: Text(sublabel,
-                    style: const TextStyle(
-                        color: Colors.white70, fontSize: 11)),
-              ),
-            ),
-          ),
-          if (isCamera)
-            Positioned(
-              bottom: 36,
-              left: 0,
-              right: 0,
-              child: const Center(
-                child: Text('(camera permission needed)',
-                    style:
-                        TextStyle(color: Colors.white30, fontSize: 10)),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Reusable hover button ──────────────────────────────────────────────────────
-class _HoverButton extends StatefulWidget {
-  final String label;
-  final bool filled;       // true = black bg, false = light bg
-  final bool fullWidth;
-  final VoidCallback onTap;
-
-  const _HoverButton({
-    required this.label,
-    required this.filled,
-    required this.onTap,
-    this.fullWidth = false,
-  });
-
-  @override
-  State<_HoverButton> createState() => _HoverButtonState();
-}
-
-class _HoverButtonState extends State<_HoverButton> {
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _hovered || _pressed;
-
-    final Color bg = widget.filled
-        ? (active ? Colors.grey[800]! : Colors.black)
-        : (active ? Colors.grey[200]! : const Color(0xFFF5F5F5));
-
-    final Color textColor = widget.filled
-        ? Colors.white
-        : (active ? Colors.black : Colors.black87);
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: widget.fullWidth ? double.infinity : null,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Text(
-              widget.label,
-              style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Hover close button (X) ─────────────────────────────────────────────────────
-class _HoverCloseButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _HoverCloseButton({required this.onTap});
-
-  @override
-  State<_HoverCloseButton> createState() => _HoverCloseButtonState();
-}
-
-class _HoverCloseButtonState extends State<_HoverCloseButton> {
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _hovered || _pressed;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: active ? Colors.grey[300]! : const Color(0xFFF5F5F5),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.close,
-            size: 18,
-            color: active ? Colors.black : Colors.black54,
-          ),
-        ),
-      ),
     );
   }
 }

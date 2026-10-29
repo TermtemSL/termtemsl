@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'translate_screen.dart';
-import 'chat_screen.dart';
-import 'education_screen.dart';
+// ignore: unused_import — HoverAvatar will be wired in Phase 6 shell refactor
+import '../shared/widgets/hover_avatar.dart';
+import '../features/translate/translate_screen.dart';
+import '../features/chat/chat_screen.dart';
+import '../features/education/education_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
 import 'setting_screen.dart';
-import 'home_screen.dart';
+import '../features/home/home_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -168,31 +170,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Termtem',
-          style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Builder(
-              builder: (btnCtx) => _HoverAvatar(
-                isLoggedIn: _isLoggedIn,
-                initial: _isLoggedIn && _userName.isNotEmpty
-                    ? _userName[0].toUpperCase()
-                    : null,
-                onTap: () => _onAvatarTap(btnCtx),
-              ),
-            ),
-          ),
-        ],
-      ),
+
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -212,16 +190,40 @@ class _MainScreenState extends State<MainScreen> {
             unselectedItemColor: Colors.grey,
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
-            items: const [
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.interpreter_mode), label: 'Translate'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.forum), label: 'Chat'),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.school), label: 'Education'),
-            ],
+            items: [
+                      BottomNavigationBarItem(
+                        icon: Image.asset(
+                          'assets/icons/home.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Image.asset(
+                          'assets/icons/translate.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        label: 'Translate',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Image.asset(
+                          'assets/icons/chatbot.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        label: 'Chat',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Image.asset(
+                          'assets/icons/education.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        label: 'Education',
+                      ),
+                    ],
           ),
         ),
       ),
@@ -229,63 +231,4 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-// ── Hover avatar button ────────────────────────────────────────────────────────
-class _HoverAvatar extends StatefulWidget {
-  final bool isLoggedIn;
-  final String? initial;
-  final VoidCallback onTap;
-
-  const _HoverAvatar({
-    required this.isLoggedIn,
-    required this.onTap,
-    this.initial,
-  });
-
-  @override
-  State<_HoverAvatar> createState() => _HoverAvatarState();
-}
-
-class _HoverAvatarState extends State<_HoverAvatar> {
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _hovered || _pressed;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) => setState(() => _pressed = false),
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: widget.isLoggedIn
-                ? (active ? Colors.grey[800]! : Colors.black)
-                : (active ? Colors.grey[300]! : Colors.grey[200]!),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: widget.isLoggedIn && widget.initial != null
-                ? Text(
-                    widget.initial!,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                  )
-                : Icon(Icons.person,
-                    color: active ? Colors.black : Colors.black54, size: 20),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// HoverAvatar → see lib/shared/widgets/hover_avatar.dart
